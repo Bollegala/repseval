@@ -1,16 +1,18 @@
 # README #
 
-### Requirements ###
+## Requirements ##
 - Python 2.7 or above
 - numpy
 - scipy
 
-### Execution ###
+## Execution ##
 
-## Evaluating using Semantic Similarity Benchmarks ##
+### Evaluating using Semantic Similarity Benchmarks ###
 
 To evaluate on semantic similarity benchmarks, go to the src directory and execute
+```
 python eval.py -m lex -d noOfDimensions -i wordRepsFile -o result.csv
+```
 
 Here -m option specifies the mode of operation and 'lex' indicates that we will be performing evaluations on semantic similarity benchmark datasets. 
 
