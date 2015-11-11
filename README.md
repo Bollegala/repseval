@@ -40,4 +40,4 @@ python eval.py -m ana -d noOfDimensions -i wordRepsFile -o result.csv
     * Google dataset (Mikolov et al. 2013 Google dataset consisting of semantic and syntactic analogies). Accuracy is used as the evaluation measure for (man, king), (woman, ?) type of proportional analogy questions, where queen is the correct answer in this case. The system must rank queen as the top result among all other candidates.
     * [SemEval 2012 Task 2 (https://sites.google.com/site/semeval2012task2/)] (MaxDiff is used as the evaluation measure)
 
-* There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. We will evaluate using all those methods. See [Bollegala et al. 2015 (http://cgi.csc.liv.ac.uk/~danushka/papers/IJCAI_2015.pdf)] for further details.
+* There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. We will evaluate using all those methods. See [Bollegala et al. 2015](http://cgi.csc.liv.ac.uk/~danushka/papers/IJCAI_2015.pdf) for further details.
