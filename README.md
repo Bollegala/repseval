@@ -25,3 +25,17 @@ each dimension of the representation.
 
 * -o is the name of the output file into which we will write the Pearson correlation coefficients and their significance values.
 This is a csv file.
+
+### Evaluating using Word Analogy Benchmarks ###
+
+To evaluate on word analogy benchmarks, go to the src directory and execute
+```
+python eval.py -m ana -d noOfDimensions -i wordRepsFile -o result.csv
+```
+
+* -m option specifies the mode of operation. In this case it must be 'ana' (representing word analogy benchmarks). 
+
+* We will use several benchmarks such as
+** SAT (accuracy of SAT questions correctly answered)
+** Google dataset (Mikolov et al. 2013 Google dataset consisting of semantic and syntactic analogies). Accuracy is used as the evaluation measure for (man, king), (woman, ?) type of proportional analogy questions, where queen is the correct answer in this case. The system must rank queen as the top result among all other candidates.
+** [SemEval 2012 Task 2 (https://sites.google.com/site/semeval2012task2/)] (MaxDiff is used as the evaluation measure)
