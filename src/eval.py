@@ -9,12 +9,14 @@ __author__ = "Danushka Bollegala"
 __licence__ = "BSD"
 __version__ = "1.0"
 
+
 import numpy
 import scipy.stats
 import sys
 import collections
+import argparse
 
-
+VERBOSE = False
 
 class WordReps:
 
@@ -469,14 +471,18 @@ def batch_process_w2v():
     pass
 
 
-def batch_process(fname, dim):
-    res_file = open("../work/proposed.csv", 'w')
+def batch_process_analogy(model_fname, dim, output_fname):
+    res_file = open(output_fname, 'w')
     res_file.write("# Method, semantic, syntactic, all, SAT, SemEval\n")
     methods = ["CosAdd", "CosMult", "CosSub", "PairDiff"]
-    settings = [(fname, dim)]
+    settings = [(model_fname, dim)]
+    words = set()
+    with open("../benchmarks/all_words.txt") as F:
+        for line in F:
+            words.add(line.strip())
     for (model, dim) in settings:
         WR = WordReps()
-        WR.read_model(model, dim)
+        WR.read_model(model, dim, words)
         for method in methods:
             print model, dim, method
             res_file.write("%s+%s, " % (model, method))
@@ -559,10 +565,12 @@ def get_correlation(dataset_fname, vects, corr_measure):
     spearman and pearson.
     """
     ignore_missing = False
-    if ignore_missing:
-        print "Ignoring missing pairs"
-    else:
-        print "Not ignoring missing pairs"
+    global VERBOSE
+    if VERBOSE:
+        if ignore_missing:
+            sys.stderr.write("Ignoring missing pairs\n")
+        else:
+            sys.stderr.write("Not ignoring missing pairs\n")
     mcFile = open(dataset_fname)
     mcPairs = {}
     mcWords = set()
@@ -598,8 +606,8 @@ def get_correlation(dataset_fname, vects, corr_measure):
         human.append(rating) 
         computed.append(comp)       
         #print "%s, %s, %f, %f" % (x, y, rating, comp)
-        
-    print "Missing pairs = %d (out of %d)" % (missing_count, len(mcPairs))
+    if VERBOSE:    
+        sys.stderr.write("Missing pairs = %d (out of %d)\n" % (missing_count, len(mcPairs)))
 
     if found_pairs is False:
         #print "No pairs were scored!"
@@ -613,121 +621,53 @@ def get_correlation(dataset_fname, vects, corr_measure):
     pass
 
 
-def process():
+def batch_process_lexical(model_fname, dim, output_fname):
     """
     This function shows how to evaluate a trained word representations
     on semantic similarity benchmarks.
     """
     WR = WordReps()
-    model = sys.argv[1]
-    dim = int(sys.argv[2])
     # We will load vectors only for the words in the benchmarks.
     words = set()
     with open("../benchmarks/all_words.txt") as F:
         for line in F:
             words.add(line.strip())
-    WR.read_model(model, dim, words)
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men"]
-    for bench in benchmarks:
-        print "\n", bench, get_correlation("../benchmarks/%s_pairs.txt" % bench, WR.vects, "spearman")
-    pass
-
-
-def batch_process(model_fname, res_fname, dim):
-    """
-    Process all word representations learnt for different lambda values for a particular
-    semantic relation and create a csv file.
-    """
-    #model_fname = sys.argv[1]
-    #dim = int(sys.argv[2])
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men"]
-    method = "CosAdd"
-    words = set()
-    with open("../benchmarks/all_words.txt") as F:
-        for line in F:
-            words.add(line.strip())
-    res_file = open(res_fname, 'w')
-    res_file.write("lmda, ws, rg, mc, rw, scws, men, semantic, syntactic, total, SAT, SemEval\n")
-    res_file.flush()
-    print "Processing file =", model_fname
-    WR = WordReps()
     WR.read_model(model_fname, dim, words)
-    for bench in benchmarks:
-        res_file.write("%f, " % get_correlation("../benchmarks/%s_pairs.txt" % bench, WR.vects, "spearman")[0])
-        res_file.flush()
-    Google_res = eval_Google_Analogies(WR.vects, method)
-    res_file.write("%f, %f, %f, " % (Google_res["semantic"], Google_res["syntactic"], Google_res["total"]))
-    res_file.flush()
-    SAT_res = eval_SAT_Analogies(WR.vects, method)
-    res_file.write("%f, " % SAT_res["acc"])
-    res_file.flush()
-    SemEval_res = eval_SemEval(WR.vects, method)
-    res_file.write("%f\n" % SemEval_res["acc"])
-    res_file.flush()
-    pass
-
-
-def batch_process_relation(relation):
-    """
-    Process all word representations learnt for different lambda values for a particular
-    semantic relation and create a csv file.
-    """
-    #relation = sys.argv[1]
-    dim = 300
-    #lmda_vals = [10, 100, 500, 1000, 2000, 5000, 10000]
-    lmda_vals = [10]
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men"]
-    method = "CosAdd"
-    words = set()
-    with open("../benchmarks/all_words.txt") as F:
-        for line in F:
-            words.add(line.strip())
-    res_file = open("../work/results/%s.csv" % relation, 'w')
-    res_file.write("lmda, ws, rg, mc, rw, scws, men, semantic, syntactic, total, SAT, SemEval\n")
-    res_file.flush()
-    for lmda in lmda_vals:
-        model_fname = "../work/models/%s_%d" % (relation, lmda)
-        res_file.write("%d, " % lmda)
-        print "Processing file =", model_fname
-        WR = WordReps()
-        WR.read_model(model_fname, dim, words)
-        for bench in benchmarks:
-            res_file.write("%f, " % get_correlation("../benchmarks/%s_pairs.txt" % bench, WR.vects, "spearman")[0])
-        res_file.flush()
-        Google_res = eval_Google_Analogies(WR.vects, method)
-        res_file.write("%f, %f, %f, " % (Google_res["semantic"], Google_res["syntactic"], Google_res["total"]))
-        res_file.flush()
-        SAT_res = eval_SAT_Analogies(WR.vects, method)
-        res_file.write("%f, " % SAT_res["acc"])
-        res_file.flush()
-        SemEval_res = eval_SemEval(WR.vects, method)
-        res_file.write("%f\n" % SemEval_res["acc"])
-        res_file.flush()
+    output_file = open(output_fname, 'w')
+    output_file.write("# Benchmark, Spearman, Significance\n")
+    for bench in benchmarks:
+        (corr, sig) = get_correlation("../benchmarks/%s_pairs.txt" % bench, WR.vects, "spearman")
+        output_file.write("%s, %s, %s\n" % (bench, str(corr), str(sig)))
+        print "Benchmark = %s,\t Spearman = %s,\t Significance = %s" % (bench, str(corr), str(sig))
     pass
 
 
-def all_relations():
-    relations = ["synonyms", "antonyms", "hypernyms", "hyponyms", "member_holonyms", 
-                "member_meronyms", "part_holonyms", "part_meronyms", "all_word_pairs"]
-    for relation in relations:
-        batch_process_relation(relation)
+
+def main():
+    """
+    Catch the arguments.
+    """
+    parser = argparse.ArgumentParser(description="Evaluate pre-trained word representation on semantic similarity and word analogy tasks.")
+    parser.add_argument("-mode", type=str, help="specify the mode of evaluation. 'lex' for semantic similarity evaluation, 'ana' for word analogy evaluation. If none specified we will evaluate both.")
+    parser.add_argument("-dim", type=int, help="specify the dimensionality of the word representations as an integer.")
+    parser.add_argument("-input", type=str, help="specify the input file from which to read word representations.")
+    parser.add_argument("-output", type=str, help="specify the csv formatted output file to which the evaluation result to be written.")
+    parser.add_argument("-verbose", action="store_true", help="if set, we will display debug info.")
+    args = parser.parse_args()
+    global VERBOSE
+    if args.verbose:
+        VERBOSE = True
+    if args.mode.lower() == "lex":
+        batch_process_lexical(args.input, args.dim, args.output) 
+    elif args.mode.lower() == "ana":
+        batch_process_analogy(args.input, args.dim, args.output)
+    else:
+        sys.stderr.write("Invalid option for mode. It must be either lex or ana\n")
     pass
-
-
-def glove_batches():
-    for dim in [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]:
-        print dim
-        batch_process("../work/models/%d.model" % dim, "../work/results/dims/%d.csv" % dim, dim)
-    pass
-pass
-
 
 
 if __name__ == "__main__":
-    #batch_process_relation("synonyms")
-    #all_relations()
-    batch_process(sys.argv[1], sys.argv[2], int(sys.argv[3]))
-    #glove_batches()
-    #get_words_in_benchmarks()
+    main()
     
    
