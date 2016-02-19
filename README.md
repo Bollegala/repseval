@@ -30,11 +30,12 @@ This is a csv file.
 
 | Dataset   | word pairs | Publication/distribution |
 | --------  | ---------- | ------------------------ |
-| Word Similarity 353 (WS) | 353 | [Link](http://www.cs.technion.ac.il/~gabr/resources/data/)wordsim353/) | Miller-Charles (MC) | 28 | MILLER, G. A. et CHARLES, W. G. (1991). Contextual correlates of semantic similarity. Language and Cognitive Processes, 6(1):1-28. |
+| Word Similarity 353 (WS) | 353 | [Link](http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/) | Miller-Charles (MC) | 28 | MILLER, G. A. et CHARLES, W. G. (1991). Contextual correlates of semantic similarity. Language and Cognitive Processes, 6(1):1-28. |
 | Rubenstein-Goodenough (RG) | 65 | RUBENSTEIN, H. et GOODENOUGH, J. B. (1965). Contextual correlates of synonymy. Communications of the ACM, 8(10):627-633.|
 | MEN | 3000 | [Link](http://clic.cimec.unitn.it/~elia.bruni/MEN) |
 | Stanford Contextual Word Similarity (SCWC) | 2003 | [Link](http://nlp.stanford.edu/pubs/HuangACL12.pdf) |
 Rare Words (RW) | 2034 | [Link](http://nlp.stanford.edu/~lmthang/data/papers/conll13_morpho.pdf) |
+| SimLex | 999 | [Link](http://www.cl.cam.ac.uk/~fh295/simlex.html) |
 
 
 ### Evaluating using Word Analogy Benchmarks ###
