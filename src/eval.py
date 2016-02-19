@@ -505,7 +505,7 @@ def get_words_in_benchmarks():
     Get the set of words in benchmarks.
     """
     words = set()
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men"]
+    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]
     for bench in benchmarks:
         with open("../benchmarks/%s_pairs.txt" % bench) as F:
             for line in F:
@@ -633,7 +633,7 @@ def batch_process_lexical(model_fname, dim, output_fname):
         for line in F:
             words.add(line.strip())
     WR.read_model(model_fname, dim, words)
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men"]
+    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]
     output_file = open(output_fname, 'w')
     output_file.write("# Benchmark, Spearman, Significance\n")
     for bench in benchmarks:
@@ -669,5 +669,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    #get_words_in_benchmarks()
     
    
