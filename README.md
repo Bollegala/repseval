@@ -26,6 +26,8 @@ each dimension of the representation.
 * -o is the name of the output file into which we will write the Pearson correlation coefficients and their significance values.
 This is a csv file.
 
+#### The following semantic similarity benchmarks are available in this suite. ####
+
 ### Evaluating using Word Analogy Benchmarks ###
 
 To evaluate on word analogy benchmarks, go to the src directory and execute
