@@ -30,7 +30,7 @@ This is a csv file.
 
 | Dataset   | word pairs | Publication/distribution |
 | --------  | ---------- | ------------------------ |
-Word Similarity 353 (WS) | 353 | [Link (http://www.cs.technion.ac.il/~gabr/resources/data/)wordsim353/) |
+Word Similarity 353 (WS) | 353 | [Link] (http://www.cs.technion.ac.il/~gabr/resources/data/)wordsim353/) |
 
 
 ### Evaluating using Word Analogy Benchmarks ###
