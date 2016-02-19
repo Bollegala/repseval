@@ -28,6 +28,11 @@ This is a csv file.
 
 #### The following semantic similarity benchmarks are available in this suite. ####
 
+| Dataset   | word pairs | Publication/distribution |
+| --------  | ---------- | ------------------------ |
+Word Similarity 353 (WS) | 353 | [Link (http://www.cs.technion.ac.il/~gabr/resources/data/)wordsim353/) |
+
+
 ### Evaluating using Word Analogy Benchmarks ###
 
 To evaluate on word analogy benchmarks, go to the src directory and execute
