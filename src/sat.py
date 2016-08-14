@@ -9,9 +9,12 @@ pair given in the question, CHOICES are the five choices given
 in the question.
 """
 
-QUESTIONS_FILE = "../benchmarks/SAT-package-V3.txt"
-#contains a unique ID assigned to deduplicated sat word-pairs.
-WORD_PAIR_ID_FILE = "../benchmarks/sat_pairs"
+import os
+
+pkg_dir = os.path.dirname(os.path.abspath(__file__))
+QUESTIONS_FILE = os.path.join(pkg_dir, "../benchmarks/SAT-package-V3.txt")
+# contains a unique ID assigned to deduplicated sat word-pairs.
+WORD_PAIR_ID_FILE = os.path.join(pkg_dir, "../benchmarks/sat_pairs")
 
 
 class SAT:

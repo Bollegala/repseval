@@ -9,14 +9,17 @@ __author__ = "Danushka Bollegala"
 __licence__ = "BSD"
 __version__ = "1.0"
 
-
 import numpy
 import scipy.stats
 import sys
 import collections
 import argparse
+import os
+
+pkg_dir = os.path.dirname(os.path.abspath(__file__))
 
 VERBOSE = False
+
 
 class WordReps:
 
@@ -27,7 +30,7 @@ class WordReps:
         pass
 
 
-    def read_model(self, fname, dim, words, HEADER=False,):
+    def read_model(self, fname, dim, words=None, HEADER=False,):
         """
         Read the word vectors where the first token is the word.
         """
@@ -50,11 +53,11 @@ class WordReps:
         while len(line) != 0:
             p = line.split()
             word = p[0]
-            if word in words:
+            if words is None or word in words:
                 v = numpy.zeros(R, float)
                 for i in range(0, R):
                     v[i] = float(p[i+1])
-                vects[word] = normalize(v)
+                vects[word] = v
                 vocab.append(word)
             line = F.readline()
         F.close()
@@ -82,7 +85,7 @@ class WordReps:
             v = numpy.zeros(R, float)
             for i in range(0, R):
                 v[i] = float(p[i+1])
-            vects[word] = normalize(v)
+            vects[word] = v
             vocab.append(word)
             line = F.readline()
         F.close()
@@ -119,8 +122,7 @@ class WordReps:
             word = word.lower()
             vocab.append(word)
             vector = numpy.fromstring(F.read(binary_len), numpy.float32)
-            # If you do not want to normalize the vectors, then do not call the normalize function.
-            vects[word] = normalize(vector)            
+            vects[word] = vector        
         F.close()
         self.vocab = vocab
         self.vects = vects
@@ -131,9 +133,7 @@ class WordReps:
     def get_vect(self, word):
         if word not in self.vocab:
             return numpy.zeros(self.vector_size, float)
-        wind = self.vocab.index(word)
-        print wind
-        return self.vects[wind,:]
+        return self.vects[word]
 
 
     def normalize_all(self):
@@ -160,7 +160,7 @@ def cosine(x, y):
     Compute the cosine similarity between two vectors x and y. 
     We must L2 normalize x and y before we use this function.
     """
-    return numpy.dot(x,y.T)
+    return numpy.dot(x,y.T) / (numpy.linalg.norm(x) * numpy.linalg.norm(y))
 
 
 def normalize(x):
@@ -176,7 +176,7 @@ def eval_SemEval(vects, method):
     Answer SemEval questions. 
     """
     from semeval import SemEval
-    S = SemEval("../benchmarks/semeval")
+    S = SemEval(os.path.join(pkg_dir, "../benchmarks/semeval"))
     total_accuracy = 0
     print "Total no. of instances in SemEval =", len(S.data)
     for Q in S.data:
@@ -195,7 +195,7 @@ def eval_SemEval(vects, method):
             scores.append(((first, second), val))
         # sort the scores and write to a file. 
         scores.sort(lambda x, y: -1 if x[1] > y[1] else 1)
-        score_fname = "../work/semeval/%s.txt" % Q["filename"]
+        score_fname = os.path.join(pkg_dir, "../work/semeval/%s.txt" % Q["filename"])
         score_file = open(score_fname, 'w')
         for ((first, second), score) in scores:
             score_file.write('%f "%s:%s"\n' % (score, first, second))
@@ -251,7 +251,7 @@ def eval_Google_Analogies(vects, method):
     We consider the set of fourth words in the test dataset as the
     candidate space for the correct answer.
     """
-    analogy_file = open("../benchmarks/analogy_pairs.txt")
+    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/analogy_pairs.txt"))
     cands = []
     questions = collections.OrderedDict()
     total_questions = {}
@@ -326,33 +326,6 @@ def eval_Google_Analogies(vects, method):
     return {"semantic": semantic_accuracy, "syntactic":syntactic_accuracy, "total":accuracy}
 
 
-def eval_word2vec(method):
-    """
-    Evaluate the performance of the word2vec vectors.
-    """
-    w2v = WordReps()
-    model = "../data/word-vects/w2v.neg.300d.bin"
-    #model = "../data/word-vects/skip-100.bin"
-    print "Model file name =", model
-    w2v.read_w2v_model(model)
-    #eval_Google_Analogies(w2v.vects, "../work/Google.csv", method)
-    eval_SAT_Analogies(w2v.vects, method)
-    pass
-
-
-def eval_glove(method):
-    """
-    Evaluate the performance of the models trained by Glove. 
-    """
-    glove = WordReps()
-    model = "../data/word-vects/glove.42B.300d.txt"
-    dim = 300
-    print "Model file name =", model
-    glove.read_model(model, dim)
-    eval_Google_Analogies(glove.vects, "../work/Google.csv", method)
-    eval_SAT_Analogies(glove.vects, method)
-    pass
-
 
 ############### SCORING FORMULAS ###################################################
 def scoring_formula(va, vb, vc, vd, method):
@@ -362,7 +335,7 @@ def scoring_formula(va, vb, vc, vd, method):
     if method == "CosSub":
         return subt_cos(va, vb, vc, vd)
     elif method == "PairDiff":
-        return PairDirection(va, vb, vc, vd)
+        return PairDiff(va, vb, vc, vd)
     elif method == "CosMult":
         return mult_cos(va, vb, vc, vd)
     elif method == "CosAdd":
@@ -409,7 +382,7 @@ def subt_cos(va, vb, vc, vd):
     return cosine(normalize(va - vc), normalize(vb - vd))
 
 
-def PairDirection(va, vb, vc, vd):
+def PairDiff(va, vb, vc, vd):
     """
     Uses the following formula for scoring:
     cos(vd - vc, vb - va)
@@ -417,58 +390,6 @@ def PairDirection(va, vb, vc, vd):
     return cosine(normalize(vd - vc), normalize(vb - va))
 ####################################################################################
 
-
-def batch_process_glove():
-    res_file = open("../work/hlbl.csv", 'w')
-    res_file.write("# Method, semantic, syntactic, all, SAT, SemEval\n")
-    methods = ["CosAdd", "CosMult", "CosSub", "PairDiff", "DomFunc"]
-    D = 200
-    settings = [("../data/embeddings-scaled.EMBEDDING_SIZE=200.txt", 200)]
-    #settings = [("../data/word-vects/glove.42B.300d.txt", 300), ("../data/word-vects/glove.840B.300d.txt", 300)]
-    #settings = [("../glove/glove%d.txt" % D, D)]
-    for (model, dim) in settings:
-        WR = WordReps()
-        WR.read_model(model, dim)
-        for method in methods:
-            print model, dim, method
-            res_file.write("%s+%s, " % (model, method))
-            res_file.flush()
-            Google_res = eval_Google_Analogies(WR.vects, method)
-            res_file.write("%f, %f, %f, " % (Google_res["semantic"], Google_res["syntactic"], Google_res["total"]))
-            res_file.flush()
-            SAT_res = eval_SAT_Analogies(WR.vects, method)
-            res_file.write("%f, " % SAT_res["acc"])
-            res_file.flush()
-            SemEval_res = eval_SemEval(WR.vects, method)
-            res_file.write("%f\n" % SemEval_res["acc"])
-            res_file.flush()
-    res_file.close()
-    pass
-
-
-def batch_process_w2v():
-    res_file = open("../work/cbow_batch.csv", 'w')
-    res_file.write("# Method, semantic, syntactic, all, SAT, SemEval\n")
-    methods = ["CosAdd", "CosMult", "CosSub", "PairDiff", "DomFunc"]
-    settings = [("../data/word-vects/freebase-skip.1000", 1000)]
-    for (model, dim) in settings:
-        WR = WordReps()
-        WR.read_w2v_model_binary(model, dim)
-        for method in methods:
-            print model, dim, method
-            res_file.write("%s+%s, " % (model, method))
-            res_file.flush()
-            Google_res = eval_Google_Analogies(WR.vects, method)
-            res_file.write("%f, %f, %f, " % (Google_res["semantic"], Google_res["syntactic"], Google_res["total"]))
-            res_file.flush()
-            SAT_res = eval_SAT_Analogies(WR.vects, method)
-            res_file.write("%f, " % SAT_res["acc"])
-            res_file.flush()
-            SemEval_res = eval_SemEval(WR.vects, method)
-            res_file.write("%f\n" % SemEval_res["acc"])
-            res_file.flush()
-    res_file.close()
-    pass
 
 
 def batch_process_analogy(model_fname, dim, output_fname):
@@ -643,6 +564,40 @@ def batch_process_lexical(model_fname, dim, output_fname):
     pass
 
 
+def evaluate_embeddings(embed_fname, dim):
+    """
+    This function can be used to evaluate an embedding.
+    """
+    res = {}
+    WR = WordReps()
+    # We will load vectors only for the words in the benchmarks.
+    words = set()
+    with open(os.path.join(pkg_dir, "../benchmarks/all_words.txt")) as F:
+        for line in F:
+            words.add(line.strip())
+    WR.read_model(embed_fname, dim, words)
+
+    # semantic similarity benchmarks.
+    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
+    for bench in benchmarks:
+        (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
+        res[bench] = corr
+
+    # word analogy benchmarks.
+    scoring_method = "CosMult"
+    res["scoring_method"] = scoring_method
+    res["Google_res"] = eval_Google_Analogies(WR.vects, scoring_method)
+    #res["SAT_res"] = eval_SAT_Analogies(WR.vects, scoring_method)
+    res["SemEval_res"] = eval_SemEval(WR.vects, scoring_method)
+
+    res_file = open("../work/res.csv", 'w')
+    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval\n")
+    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
+            res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
+            res["Google_res"]["total"], res["SemEval_res"]["acc"]))
+    res_file.close()
+    return res
+
 
 def main():
     """
@@ -668,7 +623,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    #main()
     #get_words_in_benchmarks()
+    #evaluate_embeddings("../../../../embeddings/sg.300", 300)
+    evaluate_embeddings("../../../work/glove300+sg300+600.avg", 300)
     
    

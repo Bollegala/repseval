@@ -8,6 +8,7 @@ Danushka Bollegala
 
 import string
 import subprocess
+import os
 
 
 class SemEval:
