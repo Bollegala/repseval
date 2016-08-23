@@ -57,7 +57,7 @@ class WordReps:
                 v = numpy.zeros(R, float)
                 for i in range(0, R):
                     v[i] = float(p[i+1])
-                vects[word] = v
+                vects[word] = normalize(v)
                 vocab.append(word)
             line = F.readline()
         F.close()
@@ -332,6 +332,10 @@ def scoring_formula(va, vb, vc, vd, method):
     """
     Call different scoring formulas. 
     """
+    t = numpy.copy(vb)
+    vb = vc
+    vc = t
+
     if method == "CosSub":
         return subt_cos(va, vb, vc, vd)
     elif method == "PairDiff":
@@ -342,6 +346,8 @@ def scoring_formula(va, vb, vc, vd, method):
         return add_cos(va, vb, vc, vd)
     elif method == "DomFunc":
         return domain_funct(va, vb, vc, vd)
+    elif method == "EleMult":
+        return elementwise_multiplication(va, vb, vc, vd)
     else:
         raise ValueError
 
@@ -372,6 +378,15 @@ def domain_funct(va, vb, vc, vd):
     Uses the Formula proposed by Turney in Domain and Function paper.
     """
     return numpy.sqrt((1.0 + cosine(va, vc))/2.0 * (1.0 + cosine(vb, vd))/2.0)
+
+
+def elementwise_multiplication(va, vb, vc, vd):
+    """
+    Represent the first word-pair by the elementwise multiplication of va and vb.
+    Do the same for vc and vd. Finally measure the cosine similarity between the
+    two resultant vectors.
+    """
+    return cosine(va * vb, vc * vd)
 
 
 def subt_cos(va, vb, vc, vd):
@@ -617,15 +632,19 @@ def main():
         batch_process_lexical(args.input, args.dim, args.output) 
     elif args.mode.lower() == "ana":
         batch_process_analogy(args.input, args.dim, args.output)
+    elif args.mode.lower() == "full":
+        evaluate_embeddings(args.input, args.dim)
     else:
+        print parser.print_help()
         sys.stderr.write("Invalid option for mode. It must be either lex or ana\n")
     pass
 
 
 if __name__ == "__main__":
-    #main()
+    main()
     #get_words_in_benchmarks()
-    #evaluate_embeddings("../../../../embeddings/sg.300", 300)
-    evaluate_embeddings("../../../work/glove300+sg300+600.avg", 300)
+    #evaluate_embeddings("../../../../embeddings/glove.42B.300d.txt", 300)
+    #evaluate_embeddings("../../../work/glove+sg.concat", 600)
+    #evaluate_embeddings("../../../work/glove+sg.coemb", 300)
     
    
