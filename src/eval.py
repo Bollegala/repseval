@@ -251,7 +251,7 @@ def eval_Google_Analogies(vects, method):
     We consider the set of fourth words in the test dataset as the
     candidate space for the correct answer.
     """
-    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/analogy_pairs.txt"))
+    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/google-analogies.txt"))
     cands = []
     questions = collections.OrderedDict()
     total_questions = {}
