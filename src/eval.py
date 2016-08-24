@@ -264,6 +264,42 @@ def eval_SAT_Analogies(WR, method):
     return {"acc":acc, "coverage":coverage}
 
 
+def eval_diff_vect(WR):
+    """
+    Uses the DiffVect dataset for performing 1-NN relation classification.
+    We will use PairDiff to create a vector for a word-pair and then measure the similarity
+    between the target pair and the reamining word-pairs in the dataset.
+    If the 1-NN has the same relation label as the target pair, then we consider it to
+    be a correct match. We compute accuracy = correct_matches / total_instances.
+    """
+    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/diff-vec"))
+    relation = {}
+    pairs = []
+    label = ""
+    while 1:
+        line = analogy_file.readline()
+        if len(line) == 0:
+            break
+        if line.startswith(':'):  # This is a label 
+            label = line.split(':')[1].strip()
+        else:
+            p = line.strip().split()
+            (a, b) = p
+            pairs.append((a, b))
+            relation[(a, b)] = label
+    analogy_file.close()
+    n = len(pairs)
+    M = numpy.zeros((n, WR.dim), dtype=numpy.float64)
+    for (i, (a, b)) in enumerate(pairs):
+        M[i, :] = normalize(get_embedding(a, WR) - get_embedding(b, WR))
+    S = numpy.dot(M, M.T)
+    preds = (-S).argsort()[:,1]
+    corrects = sum([relation[pairs[i]] == relation[pairs[preds[i]]] for i in range(n)])
+    accuracy = float(100 * corrects) / float(n)
+    print "DiffVec Accuracy =", accuracy
+    return accuracy
+
+
 def eval_Google_Analogies(WR, method):
     """
     Evaluate the accuracy of the learnt vectors on the analogy task. 
@@ -696,15 +732,16 @@ def evaluate_embeddings(embed_fname, dim):
     scoring_method = "CosMult"
     res["scoring_method"] = scoring_method
     res["Google_res"] = eval_Google_Analogies(WR, scoring_method)
-    #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
     res["MSR_res"] = eval_MSR_Analogies(WR, scoring_method)
     res["SemEval_res"] = eval_SemEval(WR, scoring_method)
+    res["DiffVec_acc"] = eval_diff_vect(WR)
+    #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
 
     res_file = open("../work/res.csv", 'w')
-    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR\n")
-    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
+    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
+    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
             res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
-            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["MSR_res"]["accuracy"]))
+            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["MSR_res"]["accuracy"], res["DiffVec_acc"]))
     res_file.close()
     return res
 
