@@ -63,7 +63,7 @@ class WordReps:
         F.close()
         self.vocab = vocab
         self.vects = vects
-        self.vector_size = R
+        self.dim = R
         pass
 
 
@@ -85,13 +85,13 @@ class WordReps:
             v = numpy.zeros(R, float)
             for i in range(0, R):
                 v[i] = float(p[i+1])
-            vects[word] = v
+            vects[word] = normalize(v)
             vocab.append(word)
             line = F.readline()
         F.close()
         self.vocab = vocab
         self.vects = vects
-        self.vector_size = R
+        self.dim = R
         pass
 
 
@@ -126,7 +126,7 @@ class WordReps:
         F.close()
         self.vocab = vocab
         self.vects = vects
-        self.vector_size = vector_size
+        self.dim = vector_size
         pass
 
 
@@ -160,7 +160,9 @@ def cosine(x, y):
     Compute the cosine similarity between two vectors x and y. 
     We must L2 normalize x and y before we use this function.
     """
-    return numpy.dot(x,y.T) / (numpy.linalg.norm(x) * numpy.linalg.norm(y))
+    #return numpy.dot(x,y.T) / (numpy.linalg.norm(x) * numpy.linalg.norm(y))
+    norm = numpy.linalg.norm(x) * numpy.linalg.norm(y)
+    return 0 if norm == 0 else (numpy.dot(x, y) / norm)
 
 
 def normalize(x):
@@ -171,7 +173,22 @@ def normalize(x):
     return x if norm_x == 0 else (x / norm_x)
 
 
-def eval_SemEval(vects, method):
+def get_embedding(word, WR):
+    """
+    If we can find the embedding for the word in vects, we will return it.
+    Otherwise, we will check if the lowercase version of word appears in vects
+    and if so we will return the embedding for the lowercase version of the word.
+    Otherwise we will return a zero vector.
+    """
+    if word in WR.vects:
+        return WR.vects[word]
+    elif word.lower() in WR.vects:
+        return WR.vects[word.lower()]
+    else:
+        return numpy.zeros(WR.dim, dtype=float)
+
+
+def eval_SemEval(WR, method):
     """
     Answer SemEval questions. 
     """
@@ -184,12 +201,13 @@ def eval_SemEval(vects, method):
         for (first, second) in Q["wpairs"]:
             val = 0
             for (p_first, p_second) in Q["paradigms"]:
-                if (first in vects) and (second in vects) and (p_first in vects) and (p_second in vects):
-                    #print first, second, p_first, p_second
-                    va = vects[first]
-                    vb = vects[second]
-                    vc = vects[p_first]
-                    vd = vects[p_second]
+                #if (first in WR.vects) and (second in WR.vects) and (p_first in WR.vects) and (p_second in WR.vects):
+                if 1:
+                    # print first, second, p_first, p_second
+                    va = get_embedding(first, WR)
+                    vb = get_embedding(second, WR)
+                    vc = get_embedding(p_first, WR)
+                    vd = get_embedding(p_second, WR)
                     val += scoring_formula(va, vb, vc, vd, method)
             val /= float(len(Q["paradigms"]))
             scores.append(((first, second), val))
@@ -206,7 +224,8 @@ def eval_SemEval(vects, method):
     return {"acc": acc}
 
 
-def eval_SAT_Analogies(vects, method):
+
+def eval_SAT_Analogies(WR, method):
     """
     Solve SAT word analogy questions using the vectors. 
     """
@@ -217,25 +236,25 @@ def eval_SAT_Analogies(vects, method):
     for Q in questions:
         total += 1
         (q_first, q_second) = Q['QUESTION']
-        if q_first['word'] in vects and q_second['word'] in vects:
-            va = vects[q_first['word']]
-            vb = vects[q_second['word']]
+        if q_first['word'] in WR.vects and q_second['word'] in WR.vects:
+            va = get_embedding(q_first['word'], WR)
+            vb = get_embedding(q_second['word'], WR)
             max_sim = -100
             max_cand = -100
             for (i, (c_first, c_second)) in enumerate(Q["CHOICES"]):
                 sim = 0
-                if c_first['word'] in vects and c_second['word'] in vects:
-                    vc = vects[c_first['word']]
-                    vd = vects[c_second['word']]
+                if c_first['word'] in WR.vects and c_second['word'] in WR.vects:
+                    vc = get_embedding(c_first['word'], WR)
+                    vd = get_embedding(c_second['word'], WR)
                     sim = scoring_formula(va, vb, vc, vd, method)
-                    #print q_first['word'], q_second['word'], c_first['word'], c_second['word'], sim
-                    #sim = numpy.random.random()
+                    # print q_first['word'], q_second['word'], c_first['word'], c_second['word'], sim
+                    # sim = numpy.random.random()
                     if max_sim < sim:
                         max_sim = sim 
                         max_cand = i
             if max_cand == Q['ANS']:
                 corrects += 1
-                #print "CORRECT:", q_first['word'], q_second['word'], c_first['word'], c_second['word'], sim
+                # print "CORRECT:", q_first['word'], q_second['word'], c_first['word'], c_second['word'], sim
         else:
             skipped += 1
     acc = float(100 * corrects) / float(total)
@@ -245,7 +264,7 @@ def eval_SAT_Analogies(vects, method):
     return {"acc":acc, "coverage":coverage}
 
 
-def eval_Google_Analogies(vects, method):
+def eval_Google_Analogies(WR, method):
     """
     Evaluate the accuracy of the learnt vectors on the analogy task. 
     We consider the set of fourth words in the test dataset as the
@@ -257,7 +276,7 @@ def eval_Google_Analogies(vects, method):
     total_questions = {}
     corrects = {}
     while 1:
-        line = analogy_file.readline().lower()
+        line = analogy_file.readline()
         if len(line) == 0:
             break
         if line.startswith(':'):  # This is a label 
@@ -268,10 +287,15 @@ def eval_Google_Analogies(vects, method):
         else:
             p = line.strip().split()
             total_questions[label] += 1
-            if (p[0] in vects) and (p[1] in vects) and (p[2] in vects) and (p[3] in vects):
-                questions[label].append((p[0], p[1], p[2], p[3]))
-            if (p[3] in vects) and (p[3] not in cands):
+            questions[label].append((p[0], p[1], p[2], p[3]))
+            if p[3] not in cands:
                 cands.append(p[3])
+
+            #if (p[0] in vects) and (p[1] in vects) and (p[2] in vects) and (p[3] in vects):
+            #    questions[label].append((p[0], p[1], p[2], p[3]))
+            #if (p[3] in vects) and (p[3] not in cands):
+            #    cands.append(p[3])
+
     analogy_file.close()
     valid_questions = sum([len(questions[label]) for label in questions])
     print "== Google Analogy Dataset =="
@@ -289,12 +313,12 @@ def eval_Google_Analogies(vects, method):
             # set of candidates for the current question are the fourth
             # words in all questions, except the three words for the current question.
             scores = []
-            va = vects[a]
-            vb = vects[b]
-            vc = vects[c]
+            va = get_embedding(a, WR)
+            vb = get_embedding(b, WR)
+            vc = get_embedding(c, WR)
             for cand in cands:
                 if cand not in [a,b,c]:
-                    y = vects[cand]
+                    y = get_embedding(cand, WR)
                     scores.append((cand, scoring_formula(va, vb, vc, y, method)))
 
             scores.sort(lambda p, q: -1 if p[1] > q[1] else 1)
@@ -325,6 +349,61 @@ def eval_Google_Analogies(vects, method):
     print "Total accuracy =", accuracy
     return {"semantic": semantic_accuracy, "syntactic":syntactic_accuracy, "total":accuracy}
 
+
+def eval_MSR_Analogies(WR, method):
+    """
+    Evaluate the accuracy of the learnt vectors on the analogy task using MSR dataset. 
+    We consider the set of fourth words in the test dataset as the
+    candidate space for the correct answer.
+    """
+    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/msr-analogies.txt"))
+    cands = []
+    questions = []
+    total_questions = 0
+    corrects = 0
+    while 1:
+        line = analogy_file.readline()
+        if len(line) == 0:
+            break
+        p = line.strip().split()
+        total_questions += 1
+        questions.append((p[0], p[1], p[2], p[3]))
+        if p[3] not in cands:
+            cands.append(p[3])
+
+            #if (p[0] in vects) and (p[1] in vects) and (p[2] in vects) and (p[3] in vects):
+            #    questions[label].append((p[0], p[1], p[2], p[3]))
+            #if (p[3] in vects) and (p[3] not in cands):
+            #    cands.append(p[3])
+
+    analogy_file.close()
+    print "== MSR Analogy Dataset =="
+    print "Total no. of questions =", len(questions)
+    print "Total no. of candidates =", len(cands)
+    
+    # predict the fourth word for each question.
+    count = 1
+    for (a,b,c,d) in questions:
+        if count % 100 == 0:
+            print "%d / %d" % (count, len(questions)), "\r", 
+        count += 1
+        # set of candidates for the current question are the fourth
+        # words in all questions, except the three words for the current question.
+        scores = []
+        va = get_embedding(a, WR)
+        vb = get_embedding(b, WR)
+        vc = get_embedding(c, WR)
+        for cand in cands:
+            if cand not in [a,b,c]:
+                y = get_embedding(cand, WR)
+                scores.append((cand, scoring_formula(va, vb, vc, y, method)))
+
+        scores.sort(lambda p, q: -1 if p[1] > q[1] else 1)
+        if scores[0][0] == d:
+            corrects += 1
+    accuracy = float(corrects) / float(len(questions))
+    print "MSR accuracy =", accuracy
+    return {"accuracy": accuracy}
 
 
 ############### SCORING FORMULAS ###################################################
@@ -409,7 +488,7 @@ def PairDiff(va, vb, vc, vd):
 
 def batch_process_analogy(model_fname, dim, output_fname):
     res_file = open(output_fname, 'w')
-    res_file.write("# Method, semantic, syntactic, all, SAT, SemEval\n")
+    res_file.write("# Method, semantic, syntactic, all, SAT, SemEval, MSR\n")
     methods = ["CosAdd", "CosMult", "CosSub", "PairDiff"]
     settings = [(model_fname, dim)]
     words = set()
@@ -430,8 +509,10 @@ def batch_process_analogy(model_fname, dim, output_fname):
             res_file.write("%f, " % SAT_res["acc"])
             res_file.flush()
             SemEval_res = eval_SemEval(WR.vects, method)
-            res_file.write("%f\n" % SemEval_res["acc"])
+            res_file.write("%f, " % SemEval_res["acc"])
             res_file.flush()
+            MSR_res = eval_MSR_Analogies(WR.vects, method)
+            res_file.write("%f\n" % MSR_res["accuracy"])
     res_file.close()
     pass
 
@@ -450,9 +531,9 @@ def get_words_in_benchmarks():
                 words.add(p[1])
 
     # Get words in Google analogies.
-    analogy_file = open("../benchmarks/analogy_pairs.txt")
+    analogy_file = open("../benchmarks/google-analogies.txt")
     while 1:
-        line = analogy_file.readline().lower()
+        line = analogy_file.readline()
         if len(line) == 0:
             break
         if line.startswith(':'):  # This is a label 
@@ -463,6 +544,19 @@ def get_words_in_benchmarks():
             words.add(p[1])
             words.add(p[2])
             words.add(p[3])
+    analogy_file.close()
+
+    # Get words in MSR analogies.
+    analogy_file = open("../benchmarks/msr-analogies.txt")
+    while 1:
+        line = analogy_file.readline()
+        p = line.strip().split()
+        if len(p) == 0:
+            break
+        words.add(p[0])
+        words.add(p[1])
+        words.add(p[2])
+        words.add(p[3])
     analogy_file.close()
 
     # Get SAT words.
@@ -601,15 +695,16 @@ def evaluate_embeddings(embed_fname, dim):
     # word analogy benchmarks.
     scoring_method = "CosMult"
     res["scoring_method"] = scoring_method
-    res["Google_res"] = eval_Google_Analogies(WR.vects, scoring_method)
-    #res["SAT_res"] = eval_SAT_Analogies(WR.vects, scoring_method)
-    res["SemEval_res"] = eval_SemEval(WR.vects, scoring_method)
+    res["Google_res"] = eval_Google_Analogies(WR, scoring_method)
+    #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
+    res["MSR_res"] = eval_MSR_Analogies(WR, scoring_method)
+    res["SemEval_res"] = eval_SemEval(WR, scoring_method)
 
     res_file = open("../work/res.csv", 'w')
-    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval\n")
-    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
+    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR\n")
+    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
             res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
-            res["Google_res"]["total"], res["SemEval_res"]["acc"]))
+            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["MSR_res"]["accuracy"]))
     res_file.close()
     return res
 
