@@ -19,7 +19,7 @@ class WordReps:
         pass
 
 
-    def read_model(self, fname, dim, words=None, HEADER=False,):
+    def read_model(self, fname, dim, words=None, HEADER=False):
         """
         Read the word vectors where the first token is the word.
         """
@@ -48,11 +48,11 @@ class WordReps:
         while len(line) != 0:
             p = line.split()
             word = p[0]
-            if words is None or word in words:
+            if (words is None) or (word in words):
                 v = numpy.zeros(R, float)
                 for i in range(0, R):
                     v[i] = float(p[i+1])
-                vects[word] = normalize(v)
+                vects[word] = v
                 vocab.append(word)
             line = F.readline()
         F.close()
@@ -181,3 +181,4 @@ def get_embedding(word, WR):
         return WR.vects[word.lower()]
     else:
         return numpy.zeros(WR.dim, dtype=float)
+
