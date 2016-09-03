@@ -15,177 +15,11 @@ import sys
 import collections
 import argparse
 import os
+from wordreps import WordReps, get_embedding, cosine, normalize
 
 pkg_dir = os.path.dirname(os.path.abspath(__file__))
 
 VERBOSE = False
-
-
-class WordReps:
-
-    def __init__(self):
-        self.vocab = None 
-        self.vects = None 
-        self.vector_size = None
-        pass
-
-
-    def read_model(self, fname, dim, words=None, HEADER=False,):
-        """
-        Read the word vectors where the first token is the word.
-        """
-        res = {}
-        F = open(fname)
-        if HEADER:
-            res["method"] = F.readline().split('=')[1].strip()
-            res["input"] = F.readline().split('=')[1].strip()
-            res["rank"] = int(F.readline().split('=')[1])
-            res["itermax"] = int(F.readline().split('=')[1])
-            res["vertices"] = int(F.readline().split('=')[1])
-            res["edges"] = int(F.readline().split('=')[1])
-            res["labels"] = int(F.readline().split('=')[1])
-            R = res["rank"]
-        R = dim
-        # read the vectors.
-        vects = {}
-        vocab = []
-        line = F.readline()
-        while len(line) != 0:
-            p = line.split()
-            word = p[0]
-            if words is None or word in words:
-                v = numpy.zeros(R, float)
-                for i in range(0, R):
-                    v[i] = float(p[i+1])
-                vects[word] = normalize(v)
-                vocab.append(word)
-            line = F.readline()
-        F.close()
-        self.vocab = vocab
-        self.vects = vects
-        self.dim = R
-        pass
-
-
-    def read_w2v_model_text(self, fname, dim):
-        """
-        Read the word vectors where the first token is the word.
-        """
-        F = open(fname)
-        R = dim
-        # read the vectors.
-        vects = {}
-        vocab = []
-        line = F.readline()  # vocab size and dimensionality 
-        assert(int(line.split()[1]) == R)
-        line = F.readline()
-        while len(line) != 0:
-            p = line.split()
-            word = p[0]
-            v = numpy.zeros(R, float)
-            for i in range(0, R):
-                v[i] = float(p[i+1])
-            vects[word] = normalize(v)
-            vocab.append(word)
-            line = F.readline()
-        F.close()
-        self.vocab = vocab
-        self.vects = vects
-        self.dim = R
-        pass
-
-
-    def read_w2v_model_binary(self, fname, dim):
-        """
-        Given a model file (fname) produced by word2vect, read the vocabulary list 
-        and the vectors for each word. We will return a dictionary of the form
-        h[word] = numpy.array of dimensionality.
-        """
-        F = open(fname, 'rb')
-        header = F.readline()
-        vocab_size, vector_size = map(int, header.split())
-        vocab = []
-        vects = {}
-        print "Vocabulary size =", vocab_size
-        print "Vector size =", vector_size
-        assert(dim == vector_size)
-        binary_len = numpy.dtype(numpy.float32).itemsize * vector_size
-        for line_number in xrange(vocab_size):
-            # mixed text and binary: read text first, then binary
-            word = ''
-            while True:
-                ch = F.read(1)
-                if ch == ' ':
-                    break
-                if ch != '\n':
-                    word += ch
-            word = word.lower()
-            vocab.append(word)
-            vector = numpy.fromstring(F.read(binary_len), numpy.float32)
-            vects[word] = vector        
-        F.close()
-        self.vocab = vocab
-        self.vects = vects
-        self.dim = vector_size
-        pass
-
-
-    def get_vect(self, word):
-        if word not in self.vocab:
-            return numpy.zeros(self.vector_size, float)
-        return self.vects[word]
-
-
-    def normalize_all(self):
-        """
-        L2 normalizes all vectors.
-        """
-        for word in self.vocab:
-            self.vects[word] = normalize(self.vects[word])
-        pass
-
-
-    def test_model(self):
-        A = self.get_vect("man")
-        B = self.get_vect("king")
-        C = self.get_vect("woman")
-        D = self.get_vect("queen")
-        x = B - A + C
-        print cosine(x, D)
-        pass   
-
-
-def cosine(x, y):
-    """
-    Compute the cosine similarity between two vectors x and y. 
-    We must L2 normalize x and y before we use this function.
-    """
-    #return numpy.dot(x,y.T) / (numpy.linalg.norm(x) * numpy.linalg.norm(y))
-    norm = numpy.linalg.norm(x) * numpy.linalg.norm(y)
-    return 0 if norm == 0 else (numpy.dot(x, y) / norm)
-
-
-def normalize(x):
-    """
-    L2 normalize vector x. 
-    """
-    norm_x = numpy.linalg.norm(x)
-    return x if norm_x == 0 else (x / norm_x)
-
-
-def get_embedding(word, WR):
-    """
-    If we can find the embedding for the word in vects, we will return it.
-    Otherwise, we will check if the lowercase version of word appears in vects
-    and if so we will return the embedding for the lowercase version of the word.
-    Otherwise we will return a zero vector.
-    """
-    if word in WR.vects:
-        return WR.vects[word]
-    elif word.lower() in WR.vects:
-        return WR.vects[word.lower()]
-    else:
-        return numpy.zeros(WR.dim, dtype=float)
 
 
 def eval_SemEval(WR, method):
@@ -343,8 +177,7 @@ def eval_Google_Analogies(WR, method):
     count = 1
     for label in questions:
         for (a,b,c,d) in questions[label]:
-            if count % 100 == 0:
-                print "%d%% (%d / %d)" % ((100 * count) / float(valid_questions), count, valid_questions), "\r", 
+            print "%d%% (%d / %d)" % ((100 * count) / float(valid_questions), count, valid_questions), "\r", 
             count += 1
             # set of candidates for the current question are the fourth
             # words in all questions, except the three words for the current question.
@@ -557,6 +390,7 @@ def get_words_in_benchmarks():
     """
     Get the set of words in benchmarks.
     """
+    print "Collecting words from all benchmarks..."
     words = set()
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]
     for bench in benchmarks:
@@ -594,6 +428,15 @@ def get_words_in_benchmarks():
         words.add(p[2])
         words.add(p[3])
     analogy_file.close()
+
+    # Get words in DiffVect dataset.
+    diff_vect_file = open("../benchmarks/diff-vec")
+    for line in diff_vect_file:
+        if not line.startswith(':'):
+            p = line.strip().split()
+            words.add(p[0])
+            words.add(p[1])
+    diff_vect_file.close()
 
     # Get SAT words.
     from sat import SAT
@@ -709,7 +552,7 @@ def batch_process_lexical(model_fname, dim, output_fname):
     pass
 
 
-def evaluate_embeddings(embed_fname, dim):
+def evaluate_embeddings(embed_fname, dim, res_fname):
     """
     This function can be used to evaluate an embedding.
     """
@@ -726,10 +569,11 @@ def evaluate_embeddings(embed_fname, dim):
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
     for bench in benchmarks:
         (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
+        print "%s = %f" % (bench, corr)
         res[bench] = corr
 
     # word analogy benchmarks.
-    scoring_method = "CosMult"
+    scoring_method = "CosAdd"
     res["scoring_method"] = scoring_method
     res["Google_res"] = eval_Google_Analogies(WR, scoring_method)
     res["MSR_res"] = eval_MSR_Analogies(WR, scoring_method)
@@ -737,13 +581,23 @@ def evaluate_embeddings(embed_fname, dim):
     res["DiffVec_acc"] = eval_diff_vect(WR)
     #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
 
-    res_file = open("../work/res.csv", 'w')
+    res_file = open(res_fname, 'w')
     res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
     res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
             res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
             res["Google_res"]["total"], res["SemEval_res"]["acc"], res["MSR_res"]["accuracy"], res["DiffVec_acc"]))
     res_file.close()
     return res
+
+
+def batch_eval():
+    embeds = [(100, 100), (100, 300), (300, 100), (300, 200), (300, 300), (600, 300)]
+    for (nns, comps) in embeds:
+        embed_fname = "../../../work/glove+sg+nns=%d+comps=%d.meta" % (nns, comps)
+        res_fname = "../work/result_glove+sg+nns=%d+comps=%d.meta.csv" % (nns, comps)
+        print "Evaluating nns = %d, comps = %d" % (nns, comps)
+        evaluate_embeddings(embed_fname, comps, res_fname)
+    pass
 
 
 def main():
@@ -765,7 +619,7 @@ def main():
     elif args.mode.lower() == "ana":
         batch_process_analogy(args.input, args.dim, args.output)
     elif args.mode.lower() == "full":
-        evaluate_embeddings(args.input, args.dim)
+        evaluate_embeddings(args.input, args.dim, args.output)
     else:
         print parser.print_help()
         sys.stderr.write("Invalid option for mode. It must be either lex or ana\n")
@@ -774,6 +628,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    #batch_eval()
     #get_words_in_benchmarks()
     #evaluate_embeddings("../../../../embeddings/glove.42B.300d.txt", 300)
     #evaluate_embeddings("../../../work/glove+sg.concat", 600)
