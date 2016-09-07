@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/python -u
 """
 Perform evaluations of the word representations using three analogy datasets:
 Mikolov (Google + MSRA), SAT, and SemEval.
@@ -11,11 +11,9 @@ import sys
 import collections
 import argparse
 import os
-from sklearn.neighbors import NearestNeighbors
 from wordreps import WordReps, get_embedding, cosine, normalize
 
 pkg_dir = os.path.dirname(os.path.abspath(__file__))
-VERBOSE = False
 
 __author__ = "Danushka Bollegala"
 __licence__ = "BSD"
@@ -152,8 +150,6 @@ def eval_Google_Analogies(WR, M, cands):
             total_questions[label] += 1
             questions[label].append((p[0], p[1], p[2], p[3]))
     analogy_file.close()
-
-    valid_questions = sum([len(questions[label]) for label in questions])
 
     print "== Google Analogy Dataset =="
     print "Total no. of question types =", len(questions) 
@@ -322,6 +318,46 @@ def PairDiff(va, vb, vc, vd):
     """
     return cosine(normalize(vd - vc), normalize(vb - va))
 ####################################################################################
+
+
+# def read_candidates(fname):
+#     cands = []
+#     with open(fname) as F:
+#         for line in F:
+#             word = line.strip()
+#             if word not in cands:
+#                 cands.append(word)
+#     return cands
+
+# def convert_benchmark_to_lowercase(input_fname, output_fname):
+#     F = open(input_fname)
+#     G = open(output_fname, 'w')
+#     for line in F:
+#         G.write("%s" % line.lower())
+#     F.close()
+#     G.close()
+#     pass
+
+
+
+def convert_embedding_to_lowercase(input_fname, output_fname, dim):
+    """
+    Convert all word embeddings to lowercase. We will add the lowercase
+    and uppercase versions for a particular word and create a new embedding
+    for that word.
+    """
+    print "Converting...", input_fname
+    WR = WordReps()
+    WR.read_model(input_fname, dim)
+    vects = {}
+    z = numpy.zeros(dim, dtype=float)
+    for word in WR.vects:
+        vects[word.lower()] = WR.vects.get(word, z) + WR.vects.get(word.lower(), z)
+    with open(output_fname, 'w') as F:
+        for word in vects:
+            F.write("%s %s\n" % (word, " ".join([str(x) for x in vects[word]])))
+    pass
+
 
 def get_words_in_benchmarks():
     """
@@ -511,59 +547,15 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
 
 
 def batch_eval():
-    nns = [100, 300, 600]
-    comps = [50, 100, 200, 300, 600]
-    for nn in nns:
-        for comp in comps:
-            embed_fname = "../../../work/glove+sg+intersection/n=%d+k=%d" % (nn, comp)
-            if os.path.exists(embed_fname):
-                res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
-                print "Evaluating nns = %d, comps = %d" % (nn, comp)
-                evaluate_embeddings(embed_fname, comp, res_fname)
-    pass
-
-
-def write_batch_csv():
-    F = open("../work/batch.csv", 'w')
-    F.write("#n, k, RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
     nns = [10, 50, 100, 200, 300, 600]
     comps = [10, 50, 100, 200, 300, 600]
     for nn in nns:
         for comp in comps:
-            res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
-            if os.path.exists(res_fname):
-                res_file = open(res_fname)
-                res_file.readline()
-                F.write("%d, %d, " % (nn, comp))
-                F.write("%s\n" % res_file.readline().strip())
-                res_file.close()
-    F.close()
-    pass
-
-
-def show_neighbors(fname, dim, nns):
-    WR = WordReps()
-    sys.stdout.write("Loading word embeddings from %s\n" % fname)
-    sys.stdout.flush()
-    WR.read_model(fname, dim)
-    M = numpy.zeros((len(WR.vects), dim), dtype=numpy.float)
-    wids = {}
-    for (i,w) in enumerate(WR.vocab):
-        M[i,:] = WR.vects[w]
-        wids[w] = i
-    sys.stdout.write("Computing nearest neighbours... ")
-    sys.stdout.flush()
-    nbrs = NearestNeighbors(n_neighbors=nns, algorithm='ball_tree').fit(M)
-    distances, indices = nbrs.kneighbors(M)
-    sys.stdout.write("Done\n")
-    sys.stdout.flush()
-    while 1:
-        sys.stdout.write("\nEnter query:")
-        query = sys.stdin.readline().split(':')[1].strip()
-        sys.stdout.write("Showing nearest neighbours for = %s\n" % query)
-        if query in wids:
-            for nn in indices[wids[query], 1:]:
-                print WR.vocab[nn]
+            embed_fname = "../../../work/glove+sg/n=%d+k=%d" % (nn, comp)
+            if os.path.exists(embed_fname):
+                res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
+                print "Evaluating nns = %d, comps = %d" % (nn, comp)
+                evaluate_embeddings(embed_fname, comp, res_fname)
     pass
 
 
@@ -575,12 +567,9 @@ def main():
     parser.add_argument("-dim", type=int, help="specify the dimensionality of the word representations as an integer.")
     parser.add_argument("-input", type=str, help="specify the input file from which to read word representations.")
     parser.add_argument("-output", type=str, help="specify the csv formatted output file to which the evaluation result to be written.")
-    parser.add_argument("-nns", type=bool, help="display nearest neighbours in the interactive mode.")
     args = parser.parse_args()
     
-    if args.input and args.dim and args.nns:
-        show_neighbors(args.input, args.dim)
-    elif args.input and args.dim and args.output:
+    if args.input and args.dim and args.output:
         evaluate_embeddings(args.input, args.dim, args.output)
     else:
         print parser.print_help()
@@ -591,10 +580,13 @@ def main():
 if __name__ == "__main__":
     main()
     #batch_eval()
-    #write_batch_csv()
-    #show_neighbors("../../../work/glove+sg+intersection/n=600+k=300", 300, 10)
     #get_words_in_benchmarks()
-    
+    #convert_embedding_to_lowercase("../../../../embeddings/glove.42B.300d.txt", "../../../../embeddings/lowercase/glove.42B.300d.lower.txt", 300)
+    #convert_embedding_to_lowercase("../../../../embeddings/HLBL+100", "../../../../embeddings/lowercase/HLBL+100.lower.txt", 100)
+    #convert_embedding_to_lowercase("../../../../embeddings/Huang+50", "../../../../embeddings/lowercase/Huang+50.lower.txt", 50)
+    #convert_embedding_to_lowercase("../../../../embeddings/CW+200", "../../../../embeddings/lowercase/CW+200.lower.txt", 200)
+    #convert_benchmark_to_lowercase("../benchmarks/google-analogies.txt", "../benchmarks/lower")
+
     
     
    
