@@ -11,7 +11,10 @@ import sys
 import collections
 import argparse
 import os
+
 from sklearn.neighbors import NearestNeighbors
+from sklearn.linear_model import LogisticRegression
+
 from wordreps import WordReps, get_embedding, cosine, normalize
 
 pkg_dir = os.path.dirname(os.path.abspath(__file__))
@@ -131,8 +134,6 @@ def eval_diff_vect(WR):
 def eval_Google_Analogies(WR, M, cands):
     """
     Evaluate the accuracy of the learnt vectors on the analogy task. 
-    We consider the set of fourth words in the test dataset as the
-    candidate space for the correct answer.
     """
     analogy_file = open(os.path.join(pkg_dir, "../benchmarks/google-analogies.txt"))
     questions = collections.OrderedDict()
@@ -149,8 +150,9 @@ def eval_Google_Analogies(WR, M, cands):
             corrects[label] = 0
         else:
             p = line.strip().split()
-            total_questions[label] += 1
-            questions[label].append((p[0], p[1], p[2], p[3]))
+            if all(word in WR.vects for word in p):
+                total_questions[label] += 1
+                questions[label].append((p[0], p[1], p[2], p[3]))
     analogy_file.close()
 
     valid_questions = sum([len(questions[label]) for label in questions])
@@ -158,22 +160,30 @@ def eval_Google_Analogies(WR, M, cands):
     print "== Google Analogy Dataset =="
     print "Total no. of question types =", len(questions) 
     print "Total no. of candidates =", len(cands)
+    print "Total no. of valid questions =", valid_questions
     
     # predict the fourth word for each question.
     count = 1
+    correct_count = 0
+    total = 0
     for label in questions:
         for (a,b,c,d) in questions[label]:
-            print "%d%% (%d / %d)" % ((100 * count) / float(valid_questions), count, valid_questions), "\r", 
+            total += 1
+            acc = float(correct_count * 100) / float(total)
+            print "%d%% (%d / %d) acc = %2.2f%%" % ((100 * count) / float(valid_questions), count, valid_questions, acc), "\r", 
             count += 1
             va = get_embedding(a, WR)
             vb = get_embedding(b, WR)
             vc = get_embedding(c, WR)
             x = normalize(vb - va + vc)
             s = numpy.dot(M, x)
-            nns = [cands[i] for i in (-s).argsort()[:4]]
+            nns = [cands[i] for i in numpy.argsort(-s)[0:10]]
             nns = filter(lambda y: y not in [a, b, c], nns)
-            if nns[0] == d:
+            #print "Question: ", a, b, c, d, numpy.sum(x)
+            if d in nns:
                 corrects[label] += 1
+                correct_count += 1
+            
     
     # Compute accuracy
     n = semantic_total = syntactic_total = semantic_corrects = syntactic_corrects = 0
@@ -187,7 +197,11 @@ def eval_Google_Analogies(WR, M, cands):
             semantic_corrects += corrects[label]
     print "Percentage of questions attempted = %f (%d / %d)" % ((100 * valid_questions) /float(n), valid_questions, n)
     for label in questions:
-        acc = float(100 * corrects[label]) / float(total_questions[label])
+        if total_questions[label] != 0:
+            acc = float(100 * corrects[label]) / float(total_questions[label])
+        else:
+            acc = 0
+
         print "%s = %f (correct = %d, attempted = %d, total = %d)" % (
             label, acc, corrects[label], len(questions[label]), total_questions[label])
     semantic_accuracy = float(100 * semantic_corrects) / float(semantic_total)
@@ -215,12 +229,13 @@ def eval_MSR_Analogies(WR, M, cands):
         if len(line) == 0:
             break
         p = line.strip().split()
-        total_questions += 1
-        questions.append((p[0], p[1], p[2], p[3]))
+        if all(word in WR.vects for word in p):
+            total_questions += 1
+            questions.append((p[0], p[1], p[2], p[3]))
     analogy_file.close()
 
     print "== MSR Analogy Dataset =="
-    print "Total no. of questions =", len(questions)
+    print "Total no. of valid questions =", len(questions)
     print "Total no. of candidates =", len(cands)
     
     # predict the fourth word for each question.
@@ -230,19 +245,74 @@ def eval_MSR_Analogies(WR, M, cands):
         count += 1
         # set of candidates for the current question are the fourth
         # words in all questions, except the three words for the current question.
-        scores = []
         va = get_embedding(a, WR)
         vb = get_embedding(b, WR)
         vc = get_embedding(c, WR)
         x = normalize(vb - va + vc)
         s = numpy.dot(M, x)
-        nns = [cands[i] for i in (-s).argsort()[:4]]
+        nns = [cands[i] for i in (-s).argsort()[:10]]
         nns = filter(lambda y: y not in [a, b, c], nns)
-        if nns[0] == d:
+        if d in nns[0]:
             corrects += 1
     accuracy = float(corrects) / float(len(questions))
     print "MSR accuracy =", accuracy
     return {"accuracy": accuracy}
+
+
+def eval_short_text_classification(bench_path, WR):
+    """
+    Evaluate the word embeddings by measuring their accuracy on short text classification tasks.
+    Each instance is represented as a BOW, and we compute the centroid of all word embeddings
+    for the words in an instance. Next, we train a binary logistic regression classifier.
+    We represent test instances in the same manner and report test accuracy.
+    """
+    #print "Short text classification for: ", bench_path
+    train_X = []
+    train_y = []
+    with open("%s/train" % bench_path) as train_file:
+        for line in train_file:
+            p = line.strip().split()
+            train_y.append(int(p[0]))
+            train_X.append(get_text_instance(p[1:], WR))
+
+    test_X = []
+    test_y = []        
+    with open("%s/test" % bench_path) as test_file:
+        for line in test_file:
+            p = line.strip().split()
+            test_y.append(int(p[0]))
+            test_X.append(get_text_instance(p[1:], WR))
+
+    train_X = numpy.array(train_X)
+    train_y = numpy.array(train_y)
+    test_X = numpy.array(test_X)
+    test_y = numpy.array(test_y)
+
+    #print "Total no. of train instances", train_X.shape[0]
+    #print "Total no. of test instances ", test_X.shape[0]
+
+    LR = LogisticRegression(penalty='l2', C=1.0)
+    LR.fit(train_X, train_y)
+    #print numpy.mean([t == test_y[i] for (i,t) in enumerate(LR.predict(test_X))])
+    acc = 100 * LR.score(test_X, test_y)
+    print "Accuracy for %s = %f" % (bench_path.split('/')[-1], acc)
+    return acc
+
+
+def get_text_instance(txt, WR):
+    """
+    Add all the word embeddings in the txt and return the centroid.
+    """
+    x = numpy.zeros(WR.dim, dtype=numpy.float)
+    for token in txt:
+        p = token.split(':')
+        if len(p) != 2:
+            continue
+        feat = p[0].strip()
+        feat_val = float(p[1])
+        if feat in WR.vects:
+            x += feat_val * WR.vects[feat]
+    return x
 
 
 ############### SCORING FORMULAS ###################################################
@@ -493,6 +563,13 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
     for (i,w) in enumerate(cands):
         M[i,:] = normalize(get_embedding(w, WR))
 
+    # short text classification benchmarks.
+    res["TR"] = eval_short_text_classification("../benchmarks/TR", WR)
+    res["MR"] = eval_short_text_classification("../benchmarks/MR", WR)
+    res["CR"] = eval_short_text_classification("../benchmarks/CR", WR)
+    res["SUBJ"] = eval_short_text_classification("../benchmarks/SUBJ", WR)
+    
+
 
     # word analogy benchmarks.
     res["Google_res"] = eval_Google_Analogies(WR, M, cands)
@@ -500,6 +577,7 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
     res["SemEval_res"] = eval_SemEval(WR, "CosAdd")
     res["DiffVec_acc"] = eval_diff_vect(WR)
     #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
+
 
     res_file = open(res_fname, 'w')
     res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
@@ -511,11 +589,12 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
 
 
 def batch_eval():
-    nns = [100, 300, 600]
-    comps = [50, 100, 200, 300, 600]
+    nns = [600, 900, 1200]
+    comps = [100, 300, 600, 900]
     for nn in nns:
         for comp in comps:
-            embed_fname = "../../../work/glove+sg+intersection/n=%d+k=%d" % (nn, comp)
+            print nn, comp
+            embed_fname = "../../../work/coemb/glove+sg+n=%d+k=%d.coemb" % (nn, comp)
             if os.path.exists(embed_fname):
                 res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
                 print "Evaluating nns = %d, comps = %d" % (nn, comp)
@@ -526,8 +605,8 @@ def batch_eval():
 def write_batch_csv():
     F = open("../work/batch.csv", 'w')
     F.write("#n, k, RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
-    nns = [10, 50, 100, 200, 300, 600]
-    comps = [10, 50, 100, 200, 300, 600]
+    nns = [600, 900, 1200]
+    comps = [100, 300, 600, 900]
     for nn in nns:
         for comp in comps:
             res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
@@ -559,12 +638,19 @@ def show_neighbors(fname, dim, nns):
     sys.stdout.flush()
     while 1:
         sys.stdout.write("\nEnter query:")
-        query = sys.stdin.readline().split(':')[1].strip()
+        query = sys.stdin.readline().strip()
         sys.stdout.write("Showing nearest neighbours for = %s\n" % query)
         if query in wids:
             for nn in indices[wids[query], 1:]:
                 print WR.vocab[nn]
     pass
+
+def conf_interval(r, num):
+    stderr = 1.0 / numpy.sqrt(num - 3)
+    delta = 1.96 * stderr
+    lower = numpy.tanh(numpy.arctanh(r) - delta)
+    upper = numpy.tanh(numpy.arctanh(r) + delta)
+    print "lower %.6f upper %.6f" % (lower, upper)
 
 
 def main():
@@ -579,12 +665,11 @@ def main():
     args = parser.parse_args()
     
     if args.input and args.dim and args.nns:
-        show_neighbors(args.input, args.dim)
+        show_neighbors(args.input, args.dim, 11)
     elif args.input and args.dim and args.output:
         evaluate_embeddings(args.input, args.dim, args.output)
     else:
-        print parser.print_help()
-        sys.stderr.write("Invalid option for mode. It must be either lex or ana\n")
+        sys.stderr.write(parser.print_help())
     pass
 
 
@@ -594,6 +679,7 @@ if __name__ == "__main__":
     #write_batch_csv()
     #show_neighbors("../../../work/glove+sg+intersection/n=600+k=300", 300, 10)
     #get_words_in_benchmarks()
+    #conf_interval(0.4139, 999)
     
     
     
