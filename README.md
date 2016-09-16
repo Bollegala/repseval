@@ -16,7 +16,12 @@ To evaluate on semantic similarity benchmarks, go to the src directory and execu
 python eval.py -m lex -d noOfDimensions -i wordRepsFile -o result.csv
 ```
 
-* -m option specifies the mode of operation and 'lex' indicates that we will be performing evaluations on semantic similarity benchmark datasets. 
+* -m option specifies the mode of operation.
+    'lex' to evaluate on semantic similarity benchmarks.
+    'ana' to evaluate on word analogy benchmarks.
+    'rel' to evaluate on relation classification benchmarks.
+    'txt' to evaluate on short text classification benchmarks.
+    You can combine multiple evaluations using a comma. For example, -m=lex,ana,rel,txt will perform all evaluations in one go.
 
 * -d option is used to specify the dimensionality of the word representations.
 
@@ -27,6 +32,8 @@ each dimension of the representation.
 
 * -o is the name of the output file into which we will write the Pearson correlation coefficients and their significance values.
 This is a csv file.
+
+* There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. This tool uses CosAdd as the default method. You can try different methods, which are also implemented in the tool. See source code for more details. 
 
 #### The following semantic similarity benchmarks are available in this suite. ####
 
@@ -48,18 +55,18 @@ This is a csv file.
 | Google dataset | 19558 questions (syntactic + semantic analogies)| [Link](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)|
 | MSR dataset | 7999 syntactic questions | [Link](http://www.marekrei.com/blog/linguistic-regularities-word-representations/)|
 
-### Evaluating using Word Analogy Benchmarks ###
+#### The following relation classification benchmarks are available in this suite. ####
+| Dataset   | word pairs | Publication/distribution |
+| --------  | ---------- | ------------------------ |
+| DiffVec | 12473 pairs | [Link](http://www.aclweb.org/anthology/P16-1158)|
 
-To evaluate on word analogy benchmarks, go to the src directory and execute
-```
-python eval.py -m ana -d noOfDimensions -i wordRepsFile -o result.csv
-```
+#### The following short-text classification benchmarks are available in this suite. ####
+| Dataset   | word pairs | Publication/distribution |
+| --------  | ---------- | ------------------------ |
+| TR (Stanford Sentiment Treebank) | train = 6001, test = 1821 | [Link](http://nlp.stanford.edu/sentiment/treebank.html)|
+| MR (Movie Review Dataset) | train =, 8530 test = 2132 | [Link](https://www.cs.cornell.edu/people/pabo/movie-review-data/)|
+| CR (Customer Review Dataset) | train = 1196, test = 298| [Link](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html) |
+| SUBJ (Subjectivity Dataset) | train = 8000, test = 2000| [Link](https://www.cs.cornell.edu/people/pabo/movie-review-data/)|
 
-* -m option specifies the mode of operation. In this case it must be 'ana' (representing word analogy benchmarks). 
-
-* We will use several benchmarks such as
-    * SAT (accuracy of SAT questions correctly answered)
-    * Google dataset (Mikolov et al. 2013 Google dataset consisting of semantic and syntactic analogies). Accuracy is used as the evaluation measure for (man, king), (woman, ?) type of proportional analogy questions, where queen is the correct answer in this case. The system must rank queen as the top result among all other candidates.
-    * [SemEval 2012 Task 2](https://sites.google.com/site/semeval2012task2/) (MaxDiff is used as the evaluation measure)
 
 * There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. This tool uses CosAdd as the default method. You can try different methods, which are also implemented in the tool. See source code for more details. 
