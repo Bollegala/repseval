@@ -140,7 +140,7 @@ def eval_Google_Analogies(WR, M, cands):
     total_questions = {}
     corrects = {}
     while 1:
-        line = analogy_file.readline()
+        line = analogy_file.readline().lower()
         if len(line) == 0:
             break
         if line.startswith(':'):  # This is a label 
@@ -177,10 +177,10 @@ def eval_Google_Analogies(WR, M, cands):
             vc = get_embedding(c, WR)
             x = normalize(vb - va + vc)
             s = numpy.dot(M, x)
-            nns = [cands[i] for i in numpy.argsort(-s)[0:10]]
+            nns = [cands[i] for i in numpy.argsort(-s)]
             nns = filter(lambda y: y not in [a, b, c], nns)
             #print "Question: ", a, b, c, d, numpy.sum(x)
-            if d in nns:
+            if d == nns[0]:
                 corrects[label] += 1
                 correct_count += 1
             
@@ -250,11 +250,11 @@ def eval_MSR_Analogies(WR, M, cands):
         vc = get_embedding(c, WR)
         x = normalize(vb - va + vc)
         s = numpy.dot(M, x)
-        nns = [cands[i] for i in (-s).argsort()[:10]]
+        nns = [cands[i] for i in (-s).argsort()]
         nns = filter(lambda y: y not in [a, b, c], nns)
-        if d in nns[0]:
+        if d == nns[0]:
             corrects += 1
-    accuracy = float(corrects) / float(len(questions))
+    accuracy = float(100 * corrects) / float(len(questions))
     print "MSR accuracy =", accuracy
     return {"accuracy": accuracy}
 
@@ -393,6 +393,7 @@ def PairDiff(va, vb, vc, vd):
     return cosine(normalize(vd - vc), normalize(vb - va))
 ####################################################################################
 
+
 def get_words_in_benchmarks():
     """
     Get the set of words in benchmarks.
@@ -481,7 +482,7 @@ def get_correlation(dataset_fname, vects, corr_measure):
     given in vects. Next, compute the correlation coefficient. Specify method form
     spearman and pearson.
     """
-    ignore_missing = False
+    ignore_missing = True
     global VERBOSE
     if VERBOSE:
         if ignore_missing:
@@ -549,14 +550,14 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
     with open(os.path.join(pkg_dir, "../benchmarks/all_words.txt")) as F:
         for line in F:
             words.add(line.strip())
-    WR.read_model(embed_fname, dim, words)
+    WR.read_model(embed_fname, dim, words, case_sensitive=True)
 
     # semantic similarity benchmarks.
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
     for bench in benchmarks:
         (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
         print "%s = %f" % (bench, corr)
-        res[bench] = corr
+        res[bench] = 100 * corr
 
     cands = list(words)
     M = numpy.zeros((len(cands), WR.dim), dtype=numpy.float64)
@@ -573,28 +574,28 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
 
     # word analogy benchmarks.
     res["Google_res"] = eval_Google_Analogies(WR, M, cands)
-    res["MSR_res"] = eval_MSR_Analogies(WR, M, cands)
+    #res["MSR_res"] = eval_MSR_Analogies(WR, M, cands)
     res["SemEval_res"] = eval_SemEval(WR, "CosAdd")
     res["DiffVec_acc"] = eval_diff_vect(WR)
     #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
 
 
     res_file = open(res_fname, 'w')
-    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
-    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
+    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, DiffVec, TR, MR, CR, SUBJ\n")
+    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
             res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
-            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["MSR_res"]["accuracy"], res["DiffVec_acc"]))
+            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["DiffVec_acc"], res["TR"], res["MR"], res["CR"], res["SUBJ"]))
     res_file.close()
     return res
 
 
 def batch_eval():
-    nns = [600, 900, 1200]
-    comps = [100, 300, 600, 900]
+    nns = [600, 1200]
+    comps = [100, 300, 600]
     for nn in nns:
         for comp in comps:
             print nn, comp
-            embed_fname = "../../../work/coemb/glove+sg+n=%d+k=%d.coemb" % (nn, comp)
+            embed_fname = "../../../work/ijcai/glove+sg+ME/n=%d+k=%d" % (nn, comp)
             if os.path.exists(embed_fname):
                 res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
                 print "Evaluating nns = %d, comps = %d" % (nn, comp)
@@ -604,9 +605,9 @@ def batch_eval():
 
 def write_batch_csv():
     F = open("../work/batch.csv", 'w')
-    F.write("#n, k, RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, MSR, DiffVec\n")
-    nns = [600, 900, 1200]
-    comps = [100, 300, 600, 900]
+    F.write("#n, k, RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, DiffVec\n")
+    nns = [600, 1200]
+    comps = [100, 300, 600]
     for nn in nns:
         for comp in comps:
             res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
@@ -644,6 +645,7 @@ def show_neighbors(fname, dim, nns):
             for nn in indices[wids[query], 1:]:
                 print WR.vocab[nn]
     pass
+
 
 def conf_interval(r, num):
     stderr = 1.0 / numpy.sqrt(num - 3)

@@ -19,7 +19,7 @@ class WordReps:
         pass
 
 
-    def read_model(self, fname, dim, words=None, HEADER=False):
+    def read_model(self, fname, dim, words=None, HEADER=False, case_sensitive=False):
         """
         Read the word vectors where the first token is the word.
         """
@@ -48,11 +48,13 @@ class WordReps:
         while len(line) != 0:
             p = line.split()
             word = p[0]
+            if not case_sensitive:
+                word = word.lower()
             if (words is None) or (word in words):
                 v = numpy.zeros(R, float)
                 for i in range(0, R):
                     v[i] = float(p[i+1])
-                vects[word] = v
+                vects[word] = vects.get(word, numpy.zeros(R, float)) + v
                 vocab.append(word)
             line = F.readline()
         F.close()
@@ -131,12 +133,14 @@ class WordReps:
         return self.vects[word]
 
 
-    def normalize_all(self):
+    def normalize_all(self, w=1.0):
         """
-        L2 normalizes all vectors.
+        L2 normalizes all vectors. If the weight w is specified we will multiple
+        the L2 normalized vectors by this weight. This is useful for emphasizing
+        some source embeddings when meta-embedding.
         """
         for word in self.vocab:
-            self.vects[word] = normalize(self.vects[word])
+            self.vects[word] = w * normalize(self.vects[word])
         pass
 
 
@@ -177,8 +181,6 @@ def get_embedding(word, WR):
     """
     if word in WR.vects:
         return WR.vects[word]
-    elif word.lower() in WR.vects:
-        return WR.vects[word.lower()]
     else:
         return numpy.zeros(WR.dim, dtype=float)
 
