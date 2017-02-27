@@ -553,7 +553,7 @@ def evaluate_embeddings(embed_fname, dim, res_fname, mode):
 
     if "lex" in mode:
         # semantic similarity benchmarks.
-        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
+        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior"]  
         for bench in benchmarks:
             (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
             print "%s = %f" % (bench, corr)
@@ -620,6 +620,7 @@ def show_neighbors(fname, dim, nns):
             for nn in indices[wids[query], 1:]:
                 print WR.vocab[nn]
     pass
+    
 
 def conf_interval(r, num):
     stderr = 1.0 / numpy.sqrt(num - 3)
