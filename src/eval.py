@@ -6,14 +6,11 @@ and various semantic similarity datasets such as WS353, RG, MC, SCWC, RW, MEN.
 """
 
 import numpy
-import scipy.stats
 import sys
 import collections
 import argparse
 import os
 
-from sklearn.neighbors import NearestNeighbors
-from sklearn.linear_model import LogisticRegression
 
 from wordreps import WordReps, get_embedding, cosine, normalize
 
@@ -56,7 +53,7 @@ def eval_SemEval(WR, method):
         total_accuracy += S.get_accuracy(score_fname, Q["filename"])
     acc = total_accuracy / float(len(S.data))
     print "SemEval Accuracy =", acc
-    return {"acc": acc}
+    return acc
 
 
 def eval_SAT_Analogies(WR, method):
@@ -256,7 +253,7 @@ def eval_MSR_Analogies(WR, M, cands):
             corrects += 1
     accuracy = float(100 * corrects) / float(len(questions))
     print "MSR accuracy =", accuracy
-    return {"accuracy": accuracy}
+    return accuracy
 
 
 def eval_short_text_classification(bench_path, WR):
@@ -266,6 +263,7 @@ def eval_short_text_classification(bench_path, WR):
     for the words in an instance. Next, we train a binary logistic regression classifier.
     We represent test instances in the same manner and report test accuracy.
     """
+    from sklearn.linear_model import LogisticRegression
     #print "Short text classification for: ", bench_path
     train_X = []
     train_y = []
@@ -482,7 +480,12 @@ def get_correlation(dataset_fname, vects, corr_measure):
     given in vects. Next, compute the correlation coefficient. Specify method form
     spearman and pearson.
     """
+<<<<<<< HEAD
     ignore_missing = True
+=======
+    import scipy.stats
+    ignore_missing = False
+>>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
     global VERBOSE
     if VERBOSE:
         if ignore_missing:
@@ -539,11 +542,11 @@ def get_correlation(dataset_fname, vects, corr_measure):
     pass
 
 
-def evaluate_embeddings(embed_fname, dim, res_fname):
+def evaluate_embeddings(embed_fname, dim, res_fname, mode):
     """
     This function can be used to evaluate an embedding.
     """
-    res = {}
+    res = []
     WR = WordReps()
     # We will load vectors only for the words in the benchmarks.
     words = set()
@@ -552,26 +555,42 @@ def evaluate_embeddings(embed_fname, dim, res_fname):
             words.add(line.strip())
     WR.read_model(embed_fname, dim, words, case_sensitive=True)
 
+<<<<<<< HEAD
     # semantic similarity benchmarks.
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
     for bench in benchmarks:
         (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
         print "%s = %f" % (bench, corr)
         res[bench] = 100 * corr
+=======
+    if "lex" in mode:
+        # semantic similarity benchmarks.
+        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior"]  
+        for bench in benchmarks:
+            (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
+            print "%s = %f" % (bench, corr)
+            res.append((bench, corr))
+>>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
 
     cands = list(words)
     M = numpy.zeros((len(cands), WR.dim), dtype=numpy.float64)
     for (i,w) in enumerate(cands):
-        M[i,:] = normalize(get_embedding(w, WR))
+        M[i,:] = normalize(get_embedding(w, WR))    
 
-    # short text classification benchmarks.
-    res["TR"] = eval_short_text_classification("../benchmarks/TR", WR)
-    res["MR"] = eval_short_text_classification("../benchmarks/MR", WR)
-    res["CR"] = eval_short_text_classification("../benchmarks/CR", WR)
-    res["SUBJ"] = eval_short_text_classification("../benchmarks/SUBJ", WR)
-    
+    if "ana" in mode:    
+        # word analogy benchmarks.
+        google = eval_Google_Analogies(WR, M, cands)
+        res.append(("Google-semantic", google["semantic"]))
+        res.append(("Google-syntactic", google["syntactic"]))
+        res.append(("Google-total", google["total"]))
+        res.append(("MSR", eval_MSR_Analogies(WR, M, cands)))
+        res.append(("SemEval", eval_SemEval(WR, "CosAdd")))
+        res.append(("SAT", eval_SAT_Analogies(WR, "CosAdd")["acc"]))
 
+    if "rel" in mode:
+        res.append(("DiffVec", eval_diff_vect(WR)))
 
+<<<<<<< HEAD
     # word analogy benchmarks.
     res["Google_res"] = eval_Google_Analogies(WR, M, cands)
     #res["MSR_res"] = eval_MSR_Analogies(WR, M, cands)
@@ -619,9 +638,28 @@ def write_batch_csv():
                 res_file.close()
     F.close()
     pass
+=======
+    if "txt" in mode:    
+        # short text classification benchmarks.
+        res.append(("TR", eval_short_text_classification("../benchmarks/TR", WR)))
+        res.append(("MR", eval_short_text_classification("../benchmarks/MR", WR)))
+        res.append(("CR", eval_short_text_classification("../benchmarks/CR", WR)))
+        res.append(("SUBJ", eval_short_text_classification("../benchmarks/SUBJ", WR)))
+
+
+    res_file = open(res_fname, 'w')
+    for bench in res:
+        res_file.write("%s, " % bench[0])
+
+    res_file.write("\n")
+    for bench in res:
+        res_file.write("%f, " % bench[1])
+    return res
+>>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
 
 
 def show_neighbors(fname, dim, nns):
+    from sklearn.neighbors import NearestNeighbors
     WR = WordReps()
     sys.stdout.write("Loading word embeddings from %s\n" % fname)
     sys.stdout.flush()
@@ -645,6 +683,7 @@ def show_neighbors(fname, dim, nns):
             for nn in indices[wids[query], 1:]:
                 print WR.vocab[nn]
     pass
+    
 
 
 def conf_interval(r, num):
@@ -663,13 +702,18 @@ def main():
     parser.add_argument("-dim", type=int, help="specify the dimensionality of the word representations as an integer.")
     parser.add_argument("-input", type=str, help="specify the input file from which to read word representations.")
     parser.add_argument("-output", type=str, help="specify the csv formatted output file to which the evaluation result to be written.")
-    parser.add_argument("-nns", type=bool, help="display nearest neighbours in the interactive mode.")
+    parser.add_argument("-mode", type=str, 
+        help="mode of operation. lex for semantic similarity, ana for analogy, rel for relation classification, txt for text classification.\
+              Use a comma to concatenate multiple options. nns for nearest neighbours in interactive mode, and all for all benchmarks.")
     args = parser.parse_args()
-    
-    if args.input and args.dim and args.nns:
-        show_neighbors(args.input, args.dim, 11)
-    elif args.input and args.dim and args.output:
-        evaluate_embeddings(args.input, args.dim, args.output)
+
+    if args.mode:
+        mode = args.mode.split(',')   
+        print "Modes of operations =", mode
+        if args.input and args.dim and mode[0] == "nns":
+            show_neighbors(args.input, args.dim, 11)
+        elif args.input and args.dim and args.output:
+            evaluate_embeddings(args.input, args.dim, args.output, mode)
     else:
         sys.stderr.write(parser.print_help())
     pass
@@ -677,11 +721,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #batch_eval()
-    #write_batch_csv()
-    #show_neighbors("../../../work/glove+sg+intersection/n=600+k=300", 300, 10)
-    #get_words_in_benchmarks()
-    #conf_interval(0.4139, 999)
+   
     
     
     
