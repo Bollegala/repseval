@@ -10,6 +10,7 @@ import sys
 import collections
 import argparse
 import os
+import scipy.stats
 
 
 from wordreps import WordReps, get_embedding, cosine, normalize
@@ -398,7 +399,7 @@ def get_words_in_benchmarks():
     """
     print "Collecting words from all benchmarks..."
     words = set()
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]
+    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior"]
     for bench in benchmarks:
         with open("../benchmarks/%s_pairs.txt" % bench) as F:
             for line in F:
@@ -467,11 +468,34 @@ def get_words_in_benchmarks():
                 words.add(p_first)
                 words.add(p_second)
 
+    # Get text classification datasets.
+    for dataset in ["CR", "MR", "SUBJ", "TR"]:
+        words = words.union(get_words_short_text("../benchmarks/%s/train" % dataset))
+        words = words.union(get_words_short_text("../benchmarks/%s/test" % dataset))
+
+    # Get Psycholinguistic ratings datasets.
+    with open("../benchmarks/psycho.csv") as data_file:
+        for line in data_file:
+            p = line.strip().split(',')
+            word = p[0].strip()
+            words.add(word)
 
     with open("../benchmarks/all_words.txt", 'w') as G:
         for word in words:
             G.write("%s\n" % word)
     pass
+
+def get_words_short_text(fname):
+    """
+    Return the set of words in train/test files in short-text classification datasets
+    """
+    feats = set()
+    with open(fname) as F:
+        for line in F:
+            p = line.strip().split()
+            for ent in p[1:]:
+                feats.add(ent.split(':')[0])
+    return feats
 
 
 def get_correlation(dataset_fname, vects, corr_measure):
@@ -480,12 +504,7 @@ def get_correlation(dataset_fname, vects, corr_measure):
     given in vects. Next, compute the correlation coefficient. Specify method form
     spearman and pearson.
     """
-<<<<<<< HEAD
     ignore_missing = True
-=======
-    import scipy.stats
-    ignore_missing = False
->>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
     global VERBOSE
     if VERBOSE:
         if ignore_missing:
@@ -555,29 +574,20 @@ def evaluate_embeddings(embed_fname, dim, res_fname, mode):
             words.add(line.strip())
     WR.read_model(embed_fname, dim, words, case_sensitive=True)
 
-<<<<<<< HEAD
-    # semantic similarity benchmarks.
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex"]  
-    for bench in benchmarks:
-        (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
-        print "%s = %f" % (bench, corr)
-        res[bench] = 100 * corr
-=======
-    if "lex" in mode:
+    if "lex" in mode or "all" in mode:
         # semantic similarity benchmarks.
         benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior"]  
         for bench in benchmarks:
             (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
             print "%s = %f" % (bench, corr)
             res.append((bench, corr))
->>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
 
     cands = list(words)
     M = numpy.zeros((len(cands), WR.dim), dtype=numpy.float64)
     for (i,w) in enumerate(cands):
         M[i,:] = normalize(get_embedding(w, WR))    
 
-    if "ana" in mode:    
+    if "ana" in mode or "all" in mode:    
         # word analogy benchmarks.
         google = eval_Google_Analogies(WR, M, cands)
         res.append(("Google-semantic", google["semantic"]))
@@ -587,75 +597,57 @@ def evaluate_embeddings(embed_fname, dim, res_fname, mode):
         res.append(("SemEval", eval_SemEval(WR, "CosAdd")))
         res.append(("SAT", eval_SAT_Analogies(WR, "CosAdd")["acc"]))
 
-    if "rel" in mode:
+    if "rel" in mode or "all" in mode:
         res.append(("DiffVec", eval_diff_vect(WR)))
 
-<<<<<<< HEAD
-    # word analogy benchmarks.
-    res["Google_res"] = eval_Google_Analogies(WR, M, cands)
-    #res["MSR_res"] = eval_MSR_Analogies(WR, M, cands)
-    res["SemEval_res"] = eval_SemEval(WR, "CosAdd")
-    res["DiffVec_acc"] = eval_diff_vect(WR)
-    #res["SAT_res"] = eval_SAT_Analogies(WR, scoring_method)
-
-
-    res_file = open(res_fname, 'w')
-    res_file.write("#RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, DiffVec, TR, MR, CR, SUBJ\n")
-    res_file.write("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n" % (res["rg"], res["mc"], res["ws"], res["rw"], res["scws"], 
-            res["men"], res["simlex"], res["Google_res"]["semantic"], res["Google_res"]["syntactic"], 
-            res["Google_res"]["total"], res["SemEval_res"]["acc"], res["DiffVec_acc"], res["TR"], res["MR"], res["CR"], res["SUBJ"]))
-    res_file.close()
-    return res
-
-
-def batch_eval():
-    nns = [600, 1200]
-    comps = [100, 300, 600]
-    for nn in nns:
-        for comp in comps:
-            print nn, comp
-            embed_fname = "../../../work/ijcai/glove+sg+ME/n=%d+k=%d" % (nn, comp)
-            if os.path.exists(embed_fname):
-                res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
-                print "Evaluating nns = %d, comps = %d" % (nn, comp)
-                evaluate_embeddings(embed_fname, comp, res_fname)
-    pass
-
-
-def write_batch_csv():
-    F = open("../work/batch.csv", 'w')
-    F.write("#n, k, RG, MC, WS, RW, SCWS, MEN, SimLex, sem, syn, total, SemEval, DiffVec\n")
-    nns = [600, 1200]
-    comps = [100, 300, 600]
-    for nn in nns:
-        for comp in comps:
-            res_fname = "../work/n=%d+k=%d.csv" % (nn, comp)
-            if os.path.exists(res_fname):
-                res_file = open(res_fname)
-                res_file.readline()
-                F.write("%d, %d, " % (nn, comp))
-                F.write("%s\n" % res_file.readline().strip())
-                res_file.close()
-    F.close()
-    pass
-=======
-    if "txt" in mode:    
+    if "txt" in mode or "all" in mode:    
         # short text classification benchmarks.
         res.append(("TR", eval_short_text_classification("../benchmarks/TR", WR)))
         res.append(("MR", eval_short_text_classification("../benchmarks/MR", WR)))
         res.append(("CR", eval_short_text_classification("../benchmarks/CR", WR)))
         res.append(("SUBJ", eval_short_text_classification("../benchmarks/SUBJ", WR)))
 
+    if "psy" in mode or "all" in mode:
+        psy_corr = get_psycho(WR)
+        for rating_type in psy_corr:
+            res.append((rating_type, psy_corr[rating_type]))
 
     res_file = open(res_fname, 'w')
-    for bench in res:
-        res_file.write("%s, " % bench[0])
-
-    res_file.write("\n")
-    for bench in res:
-        res_file.write("%f, " % bench[1])
+    res_file.write("# %s\n" % ", ".join([ent[0] for ent in res]))
+    res_file.write("%s\n" % ", ".join([str(ent[1]) for ent in res]))
+    res_file.close()
     return res
->>>>>>> 813865cee7dbf08469f455aec1a8cd6975647e12
+
+def get_psycho(WR):
+    """
+    Predict psycholinguistic ratings using the word embeddings.
+    """
+    from sklearn.neural_network import MLPRegressor
+    from sklearn.model_selection import cross_val_score
+    ratings = {"Valence":[], "Arousal":[], "Dominance":[], "Concreteness":[], "Imageability":[]}
+    words = []
+    X = []
+    res = {}
+    with open("../benchmarks/psycho.csv") as data_file:
+        data_file.readline()
+        for line in data_file:
+            p = line.strip().split(',')
+            word = p[0].strip()
+            words.append(word)
+            ratings["Valence"].append(float(p[3]))
+            ratings["Arousal"].append(float(p[4]))
+            ratings["Dominance"].append(float(p[5]))
+            ratings["Concreteness"].append(float(p[6]))
+            ratings["Imageability"].append(float(p[7]))
+            X.append(WR.vects.get(word, numpy.zeros(WR.dim)))
+
+    n = len(words)
+    test_end = n / 5
+    for rating_type in ratings:
+        M = MLPRegressor(hidden_layer_sizes=(100,), activation='relu', solver='adam', max_iter=1000)
+        M.fit(X[test_end:], ratings[rating_type][test_end:])
+        res[rating_type] = scipy.stats.pearsonr(ratings[rating_type][0:test_end], M.predict(X[0:test_end]))[0]
+    return res
 
 
 def show_neighbors(fname, dim, nns):
@@ -694,17 +686,34 @@ def conf_interval(r, num):
     print "lower %.6f upper %.6f" % (lower, upper)
 
 
+def random_shuffle(input_fname, output_fname):
+    """
+    Randomly suffle lines in a file except for the header.
+    """
+    import random
+    F = open(input_fname)
+    head = F.readline()
+    L = [line for line in F]
+    random.shuffle(L)
+    F.close()
+    G = open(output_fname, 'w')
+    G.write(head)
+    for line in L:
+        G.write(line)
+    G.close()
+    pass
+
 def main():
     """
     Catch the arguments.
     """
-    parser = argparse.ArgumentParser(description="Evaluate pre-trained word representation on semantic similarity and word analogy tasks.")
+    parser = argparse.ArgumentParser(description="Evaluate pre-trained word representation on semantic similarity, word analogy, relation classification, short-text classification and psycholinguistic score prediction tasks.")
     parser.add_argument("-dim", type=int, help="specify the dimensionality of the word representations as an integer.")
     parser.add_argument("-input", type=str, help="specify the input file from which to read word representations.")
     parser.add_argument("-output", type=str, help="specify the csv formatted output file to which the evaluation result to be written.")
     parser.add_argument("-mode", type=str, 
-        help="mode of operation. lex for semantic similarity, ana for analogy, rel for relation classification, txt for text classification.\
-              Use a comma to concatenate multiple options. nns for nearest neighbours in interactive mode, and all for all benchmarks.")
+        help="mode of operation. lex for semantic similarity, ana for analogy, rel for relation classification, txt for text classification and psy for psycholingustic score prediction.\
+              Use a comma to concatenate multiple options. nns for nearest neighbours in interactive mode, and all for all tasks.")
     args = parser.parse_args()
 
     if args.mode:
@@ -720,6 +729,8 @@ def main():
 
 
 if __name__ == "__main__":
+    #get_words_in_benchmarks()
+    #random_shuffle("../benchmarks/psycho.csv", "../benchmarks/random_psycho.csv")
     main()
    
     

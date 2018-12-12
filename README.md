@@ -55,6 +55,8 @@ This is a csv file.
 | Google dataset | 19558 questions (syntactic + semantic analogies)| [Link](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)|
 | MSR dataset | 7999 syntactic questions | [Link](http://www.marekrei.com/blog/linguistic-regularities-word-representations/)|
 
+* There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. This tool uses CosAdd as the default method. You can try different methods, which are also implemented in the tool. See source code for more details. 
+
 #### The following relation classification benchmarks are available in this suite. ####
 | Dataset   | word pairs | Publication/distribution |
 | --------  | ---------- | ------------------------ |
@@ -68,5 +70,8 @@ This is a csv file.
 | CR (Customer Review Dataset) | train = 1196, test = 298| [Link](https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html) |
 | SUBJ (Subjectivity Dataset) | train = 8000, test = 2000| [Link](https://www.cs.cornell.edu/people/pabo/movie-review-data/)|
 
+### Psycholinguistic score prediction. ###
+We use the input word embeddings in a neural network (containing a single hidden layer of 100 neurons and relu activation) to learn a regression model (no activation in the output layer). We use randomly selected 80% of words from MRC database and ANEW dataset to train a regression model for valence, arousal, dominance, concreteness and imageability.  We then measure the Pearson correlation between the predicted ratings and human ratings and report the corresponding correlation coefficients.
+See Section 4.2 of [this](https://arxiv.org/abs/1709.01186#) paper for further details regarding this setting.
 
-* There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. This tool uses CosAdd as the default method. You can try different methods, which are also implemented in the tool. See source code for more details. 
+
