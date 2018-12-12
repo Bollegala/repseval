@@ -19,7 +19,7 @@ VERBOSE = False
 
 __author__ = "Danushka Bollegala"
 __licence__ = "BSD"
-__version__ = "1.0"
+__version__ = "2.0"
 
 
 def eval_SemEval(WR, method):
