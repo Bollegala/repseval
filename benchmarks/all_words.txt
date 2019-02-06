@@ -286,7 +286,7 @@ reverence
 expanse
 expound
 singer
-tast
+unpleas
 tech
 prevention
 scream
@@ -642,7 +642,7 @@ celebrated
 [kim]
 [reno]
 baggins
-crackling
+ground
 celebrates
 unintentionally
 draftee
@@ -659,6 +659,7 @@ accomplishes
 mafiosi
 dusty
 documentary-like
+queue
 accomplished
 dusti
 stencil
@@ -682,7 +683,7 @@ thrill
 consoled
 assimilation
 tundra
-re-agent
+approving
 sierra
 [this]
 cardinality
@@ -1045,7 +1046,7 @@ procreating
 rover
 bachelorman-interruptus
 generator
-adroit
+characterization
 overthrow
 ellen
 rejoic
@@ -1477,7 +1478,7 @@ barren
 administrate
 barrel
 amusements
-anti-virus
+bulletin
 wording
 ambiguities
 husband-and-wife
@@ -1489,7 +1490,7 @@ blended
 socio-political
 naomi
 overwhelmed
-blender
+occupation
 Bulgarian
 cassette
 removable
@@ -1769,7 +1770,7 @@ bibliographies
 interfaith
 lane
 land
-wafer
+algorithm
 thrombosis
 beverage
 sandeman
@@ -1894,7 +1895,6 @@ lock
 coolness
 rode
 loco
-violet
 bolstered
 4-times
 engagingly
@@ -3127,6 +3127,7 @@ magnussen
 chic
 fkor
 dalrymple's
+Amman
 occur
 gastou
 multipl
@@ -3233,6 +3234,7 @@ transition
 unsung
 sf/fantasy
 tangled
+celebrity
 invitation
 embrac
 anmol
@@ -3631,7 +3633,7 @@ throbbing
 tendril
 locomotive
 dimens
-smock
+dunk
 música
 lulls
 streets
@@ -3803,7 +3805,7 @@ brightest
 vegetational
 niccol's
 hapless
-speculation
+loads
 dishwasher
 unresolved
 Boston
@@ -3937,7 +3939,6 @@ locals
 hibiscus
 pictures
 insightfully
-bridg
 unluckiest
 moretti
 interjection
@@ -4133,7 +4134,7 @@ re-fried
 aesthete
 alison
 reworked
-institut
+triangl
 infuriating
 placing
 visas
@@ -4178,7 +4179,7 @@ venerable
 excitation
 smiley
 graphically
-lucÃ­a
+re-agent
 earphones
 e
 complicating
@@ -5141,7 +5142,7 @@ trigger
 interest
 basic
 basil
-entered
+basin
 algebras
 well-deserved
 deeper
@@ -5179,7 +5180,6 @@ lugubrious
 cans
 inscrutable
 curlers
-condensing
 rton's
 sever
 finger-printed
@@ -5781,6 +5781,7 @@ sentinel
 pathfinders
 derogation
 mistreat
+squash
 laptops
 puerile
 wake
@@ -5843,7 +5844,7 @@ special-effects
 bowser
 uncomplicated
 gedeck
-yearly
+riddle
 outdoor
 sputters
 gaieti
@@ -6296,6 +6297,7 @@ immaturity
 headlines
 headliner
 washed-up
+brochure
 tislam
 chimes
 sluggishly
@@ -7495,6 +7497,7 @@ handkerchief
 michael's
 screwy
 screenplay's
+seminar
 puritanical
 thoroughly
 savings
@@ -7632,6 +7635,7 @@ apprehension
 multi-million
 lubeck
 n
+dashboard
 'news'
 natives
 ben's
@@ -7778,7 +7782,7 @@ sunlight
 stuck
 towing
 amateur
-davey's
+fragrance
 gorgeous
 plumber
 scouse
@@ -7879,7 +7883,7 @@ incitement
 looney
 impressive
 level
-cloudy
+levee
 standards
 lever
 tenths
@@ -8008,7 +8012,7 @@ eighth
 disheartening
 practic
 succeeded
-bow-wow
+joint
 leon]
 inform
 reaper
@@ -8161,7 +8165,7 @@ gang-controlled
 donation
 mok
 icon
-heinous
+latex
 demographically
 annul
 egoists
@@ -8661,7 +8665,7 @@ rehashes
 weight
 well-observed
 loopy
-levee
+cloudy
 nature's
 loops
 atonal
@@ -8686,6 +8690,7 @@ virtuosic
 'black
 tate
 prejudice
+snowboarding
 fallen
 rinzlers
 trackpad
@@ -9015,6 +9020,7 @@ partitioning
 fulfilling
 hideousness
 sullied
+contin
 strafings
 capitalizes
 clear-eyed
@@ -9119,7 +9125,7 @@ collaborators'
 unavailable
 showcase
 19th
-occupation
+blender
 unruly
 cartoon's
 chose
@@ -9763,7 +9769,7 @@ romancer's
 lame-old
 best-selling
 impartiality
-chinchilla
+telegraph
 reconnection
 do-over
 funciona
@@ -9839,7 +9845,7 @@ nanosecond
 misdemeanor
 vary
 zhang's
-TRUE
+vari
 lovingly
 directional
 obninsk
@@ -10258,6 +10264,7 @@ halle
 marlowe's
 happi
 reconnoitring
+overhead
 halls
 barrows
 monograms
@@ -10880,6 +10887,7 @@ buying
 bundy
 campion
 they're
+wafer
 attenuate
 taught
 mayor's
@@ -11699,6 +11707,7 @@ meditate
 allow
 alloy
 jolgorio
+comma
 thinning
 player's
 operative
@@ -12111,12 +12120,12 @@ shepherded
 maelström
 slytherins
 funny/gritty
-promulgation
+variety
 d'onfronio
 shannon
 varieti
 danis
-francisco
+quartz
 Belmopan
 oppression
 baffling
@@ -12545,7 +12554,7 @@ rais
 depois
 danang
 kept
-scenario
+1979
 1978
 1977
 1976
@@ -12702,6 +12711,7 @@ antibiotics
 together
 reception
 centuries-old
+lineup
 vampires
 'juvenile
 datuk
@@ -12976,7 +12986,7 @@ pelting
 moviehouse
 transverse
 'e'
-daddy's
+travil
 larded
 disassociation
 peck
@@ -12991,6 +13001,7 @@ sublime
 bitchin'
 hairline
 chlorophyll
+surname
 angel
 grotto
 correction
@@ -13031,7 +13042,7 @@ picture[+2],
 well-choreographed
 krebbs
 colombe
-ground
+crackling
 gnat
 ratio
 proportion
@@ -13091,7 +13102,7 @@ comes
 12-step
 vibrantly
 musicmatch
-characterization
+adroit
 craven's
 dispatch
 plusses
@@ -13541,7 +13552,7 @@ presumptuous
 blue-chip
 since
 arch-enemies
-dunk
+ass
 pun
 drink
 inert
@@ -14670,6 +14681,7 @@ fresher
 give
 blips
 assent
+Louisiana
 wrenches
 barbera
 therapy'
@@ -15021,6 +15033,7 @@ initialise
 relearn
 gamely
 artlessness
+tast
 designate
 opt
 egan
@@ -15048,6 +15061,7 @@ working-class
 conciliation
 pseudo-bio
 wwf
+invoice
 superfag
 tripped
 sprawl
@@ -15551,6 +15565,7 @@ js
 lopez
 tug
 dates
+rugby
 stinker
 warmness
 sterotypes
@@ -15916,7 +15931,7 @@ def
 purchaser
 factori
 compare
-baggers
+conniving
 buttress
 dandy
 'jackie'
@@ -16085,7 +16100,7 @@ polishing
 riddance
 money-driven
 oppositions
-actuary
+bahk-ai'
 reunion
 confirms
 reverend's
@@ -16100,7 +16115,7 @@ k-
 caesar
 mamá
 commentary
-folders
+province
 self-consciously
 viveka
 uncommunicative
@@ -16434,6 +16449,7 @@ dogged
 talkiness
 overly
 weinstein's
+query
 golfer
 disintegration
 graves
@@ -16505,6 +16521,7 @@ manny
 names
 Manila
 ithave
+oval
 resolutions
 staple
 chlorid
@@ -16705,6 +16722,7 @@ mooring
 pastel
 useful
 eight
+handbag
 wounding
 elizabethans
 farewell-part
@@ -16972,6 +16990,7 @@ bus
 davids
 but
 bui
+bun
 bum
 bookshelf
 bug
@@ -17221,6 +17240,7 @@ filling
 victory
 jagloms
 angus
+aroma
 cq's
 industrialization
 vacillates
@@ -17738,7 +17758,7 @@ yhf's
 threes
 leroy's
 1st
-conniving
+baggers
 smallish
 trinidad
 sledgehammer
@@ -18189,7 +18209,6 @@ glitches
 callar
 buddies
 ill-timed
-arc
 woman-
 outpaces
 same-sex
@@ -18538,6 +18557,7 @@ blackboards
 undertak
 12th
 inherent
+athletics
 hammering
 adolesc
 formulate
@@ -18633,6 +18653,7 @@ dispenser
 haack
 executioner
 pseudo-sophisticated
+asham
 atmospher
 imperils
 strengthen
@@ -18770,7 +18791,7 @@ fumigation
 brick
 pi
 'great
-bahk-ai'
+actuary
 woke
 quintet
 vaguely
@@ -18851,7 +18872,7 @@ aggravation
 'quit
 obtainment
 variant
-province
+folders
 ecology
 astringe
 denigration
@@ -19955,7 +19976,7 @@ gritty
 contemplated
 contemplates
 tombac
-narcissism
+ridiculously
 redefinitions
 congratulation
 baby-snatching
@@ -20098,7 +20119,7 @@ boy's
 resulted
 trappings
 launching
-telegraph
+chinchilla
 londoner
 artaud's
 abundantly
@@ -20194,7 +20215,7 @@ pea
 leave
 coincidences
 insufflate
-loads
+speculation
 sweeten
 wannabes
 spiritual
@@ -20526,7 +20547,7 @@ isabel
 aroused
 jeong
 ostensibly
-vari
+TRUE
 representatives
 moldy
 uninstalled
@@ -21178,6 +21199,7 @@ resting
 champion
 vardalos'
 races
+representative
 pathless
 tigt
 'murder
@@ -21763,7 +21785,7 @@ glosses
 superstars
 basted
 packer
-travil
+packet
 travis
 ever-escalating
 movie-starring
@@ -22558,6 +22580,7 @@ mutated
 way
 wax
 cativante
+burro
 innovators
 was
 war
@@ -22882,6 +22905,7 @@ tragic
 desmond
 puddle
 wanes
+nutrition
 expounding
 thruster
 taxation
@@ -23714,6 +23738,7 @@ katzs
 greengrocery
 older
 half-baked
+royalty
 reclaim
 iosselianis
 secession
@@ -24258,6 +24283,7 @@ yat
 sanctifying
 sara
 overthrowing
+quiz
 shame
 yan
 slowly
@@ -24360,7 +24386,7 @@ Jamaica
 play[-2],
 starry
 Azerbaijan
-riddle
+clown
 nonfunctional
 Polish
 refugees
@@ -24474,6 +24500,7 @@ tailoring
 risotadas
 low-cut
 under-appreciated
+acrylic
 derails
 motivator
 astounding
@@ -24806,7 +24833,7 @@ seek
 vought
 goose-pimple
 thornton
-divulge
+devolution
 79-minute
 bio-weapons
 taverniers
@@ -24982,7 +25009,7 @@ garlic
 kin
 kim
 garlin
-bequest
+opportunity
 kid
 butter
 disinvestment
@@ -25087,7 +25114,6 @@ maximum-security
 gondry's
 victorious
 counterproductive
-diffus
 independent-community
 href=
 ballesta
@@ -25392,7 +25418,7 @@ brooks
 relatively-intuitive
 trademarks
 brooke
-triangl
+institut
 cough
 keith
 orc
@@ -25512,6 +25538,7 @@ corner
 dumas's
 deportation
 fend
+dice
 fenc
 donatis
 plume
@@ -25537,6 +25564,7 @@ carnag
 fanboy
 embarrassing--i'm
 deferral
+jumper
 worrying
 silently
 hogans
@@ -25728,6 +25756,7 @@ potemkin
 wilde
 dreaming
 needlessly
+lucÃ­a
 camouflaging
 totalitarian
 caterpillars
@@ -25811,6 +25840,7 @@ worms
 devine
 sunk
 chabrol
+zinc
 semest
 sung
 emily
@@ -26487,7 +26517,7 @@ Norway
 3x
 clean-cut
 sonogram
-harvests
+anti-virus
 piper
 paddle
 inconveniences
@@ -26539,6 +26569,7 @@ boundary-hopping
 Brazilian
 inclosure
 festivals
+gateway
 rotoscope
 dissonance
 flabby
@@ -27468,7 +27499,6 @@ patronizing
 windup
 kentucky
 dept
-unpleas
 depp
 woodpussy
 stopping
@@ -27643,7 +27673,7 @@ postmodernism
 attempted
 piesiewicz's
 jez
-wireless
+heinous
 illuminating
 satisfactorily
 refriger
@@ -28011,6 +28041,7 @@ blunt
 well-paced
 wrench
 urge
+aspen
 impulsively
 removes
 betrayal
@@ -28243,6 +28274,7 @@ portend
 kamel
 showtime
 romola
+harvests
 belkin
 Último
 unbeliev
@@ -28287,7 +28319,7 @@ regard
 amongst
 stalag
 imbecilic
-burro
+diffus
 Namibia
 promote
 post-soviet
@@ -28490,6 +28522,7 @@ ballsy
 buddy-cop
 catalog
 unsurprising
+softball
 sloppy
 unfakable
 obi-wan
@@ -28881,7 +28914,6 @@ kaurism&#228
 semana
 incriminate
 differentia
-clown
 wonderland
 sprightly
 patio
@@ -29076,6 +29108,7 @@ life-embracing
 miser
 melodramas
 purpos
+barb
 numerator
 incriminating
 calvin
@@ -30767,6 +30800,7 @@ schools
 wordless
 souvlaki
 discarded
+tsunami
 werner
 offenders
 yimou
@@ -31378,7 +31412,7 @@ bedford
 pickl
 involves
 corcuera's
-devolution
+divulge
 arrests
 rubenesque
 holiness
@@ -32083,7 +32117,7 @@ pixie
 grato
 grate
 [dickens']
-basin
+entered
 lovely
 chained
 realist
@@ -32409,7 +32443,7 @@ tangle
 rated
 hedging
 rejects
-opportunity
+bequest
 quality[+2],volume
 vibrate
 interrelationships
@@ -32642,7 +32676,7 @@ fanatics
 exudes
 perfunctory
 wispy
-quaid's
+piazza
 hopping
 immaterial
 compartments
@@ -32690,6 +32724,7 @@ snub
 formerly-hasidic
 Nigeria
 orchid
+wireless
 cede
 humor
 eleph
@@ -33649,7 +33684,7 @@ stn
 scandinavian
 bride
 utopia
-asham
+bridg
 stp
 dts
 wastage
@@ -33928,6 +33963,7 @@ foley
 costlier
 eating
 rose-tinted
+booklet
 actuaciones
 raspberri
 jazzy
@@ -34354,7 +34390,7 @@ leased
 flattens
 mgm
 skyscraper-trapeze
-joint
+bow-wow
 detestable
 legitimate
 joins
@@ -34390,6 +34426,7 @@ masking
 juggle
 philbin
 sorely
+adhesive
 importance
 beaman's
 no-off
@@ -34464,7 +34501,7 @@ discouraged
 consultive
 compendium
 intercede
-variety
+promulgation
 no-nonsense
 motorcycling
 eliminate
@@ -34512,7 +34549,7 @@ carreer
 depopulation
 sleight
 belonged
-contin
+francisco
 warmer
 shes
 control[+2],menu
@@ -34551,6 +34588,7 @@ wedgie
 persuaded
 stakes
 artiste
+countenance
 primal
 wolla
 interstellar
@@ -34590,6 +34628,7 @@ cells
 ticket-buyers
 hosting
 signed
+chandler
 cruel
 chairmanship
 cello
@@ -34733,6 +34772,7 @@ eternally
 teen-exploitation
 'life
 hounslow
+flora
 ecstasy
 reality-based
 gasoline
@@ -35191,6 +35231,7 @@ commit
 definetely
 lied
 reaping
+lien
 litmus
 parsing
 complaints
@@ -35278,7 +35319,7 @@ menos
 completists
 mill
 abundant
-Louisiana
+smock
 milk
 hidebound
 good/bad
@@ -35652,7 +35693,7 @@ kool
 revelled
 hawaii-born
 pained
-countenance
+condensing
 snowbell
 singers
 childbirth
@@ -35910,6 +35951,7 @@ dolphin-gasm
 kieslowskis
 astronaut
 fueling
+daddy's
 paresh
 auditioning
 prudent
@@ -35946,7 +35988,7 @@ martal
 pueblo
 stamos
 dampen
-celebrity
+yearly
 riveted
 disagreements
 damper
@@ -36042,6 +36084,7 @@ taut
 katerina's
 lingered
 shark
+hamburger
 share
 shard
 sharp
@@ -36139,7 +36182,6 @@ benefits
 prophet
 blossoming
 perman
-pure
 pilots
 botany
 stepmother
@@ -36398,7 +36440,7 @@ snap
 conmovedora
 shoring
 camera[+2],
-ridiculously
+narcissism
 bio
 dwarves
 insol
@@ -36571,7 +36613,7 @@ use[+1],feature[+2],
 borderlands
 dinero'
 allegiances
-entwined
+penis
 bulkhead
 intricate
 hawke's
@@ -36733,6 +36775,7 @@ cuddling
 all-wise-guys-all-the-time
 bombers
 dogwalker
+guru
 lines
 correspond
 linen
@@ -37091,7 +37134,7 @@ sinners
 lleno
 kali
 punctual
-royalty
+dryer
 roofers
 apolitically
 inviting
@@ -37532,9 +37575,9 @@ conspicuously
 harrison's
 injected
 abandoning
-piazza
+quaid's
 revigorates
-1979
+scenario
 nominate
 precipitously
 classes
@@ -38923,7 +38966,7 @@ dump
 supporting
 intelligence
 ploddy
-barb
+arc
 dumb
 are
 barf
@@ -38958,6 +39001,7 @@ movie-industry
 ptica
 viennese
 c
+davey's
 blazes
 riddles
 riddled
@@ -39299,7 +39343,7 @@ cooperate
 rabbis
 faultless
 8
-penis
+entwined
 situation's
 women
 annoy
@@ -39333,7 +39377,7 @@ tan
 onions
 rape
 pally's
-guru
+pure
 epiphany
 inman
 fortunate
@@ -39567,7 +39611,7 @@ turbulent
 congregating
 merits
 unfairly
-Amman
+violet
 gutters
 closer
 closes
