@@ -46,6 +46,8 @@ This is a csv file.
 | Stanford Contextual Word Similarity (SCWC) | 2003 | [Link](http://nlp.stanford.edu/pubs/HuangACL12.pdf) |
 |Rare Words (RW) | 2034 | [Link](http://nlp.stanford.edu/~lmthang/data/papers/conll13_morpho.pdf) |
 | SimLex | 999 | [Link](http://www.cl.cam.ac.uk/~fh295/simlex.html) |
+| MTURK-771 | 771 | [Link](http://www2.mta.ac.il/~gideon/mturk771.html) |
+
 
 #### The following word analogy benchmarks are available in this suite. ####
 | Dataset   | instances | Publication/distribution |
