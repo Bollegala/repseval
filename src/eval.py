@@ -561,7 +561,18 @@ def get_correlation(dataset_fname, vects, corr_measure):
     pass
 
 
-def evaluate_embeddings(embed_fname, dim, res_fname, mode):
+def evaluate_embed_matrix(embed_matrix, words, mode="all"):
+    """
+    Directly evaluate the embedding in the matrix. embed_matrix is numpy.array of (n,d) where n is the number of words
+    and d is the dimensionality. words is a list of words in the order they appear in the rows of embed_matrix.
+    If mode="lex" we perform only semantic similarity benchmarks, "ana" perfom analogy and "all" perform everything.
+    Returns the results in a panda data frame.
+    """
+    print(" I got called")
+    pass
+
+
+def evaluate_embeddings(embed_fname, dim, res_fname=None, mode="all"):
     """
     This function can be used to evaluate an embedding.
     """
@@ -612,10 +623,11 @@ def evaluate_embeddings(embed_fname, dim, res_fname, mode):
         for rating_type in psy_corr:
             res.append((rating_type, psy_corr[rating_type]))
 
-    res_file = open(res_fname, 'w')
-    res_file.write("# %s\n" % ", ".join([ent[0] for ent in res]))
-    res_file.write("%s\n" % ", ".join([str(ent[1]) for ent in res]))
-    res_file.close()
+    if res_file is None:
+        res_file = open(res_fname, 'w')
+        res_file.write("# %s\n" % ", ".join([ent[0] for ent in res]))
+        res_file.write("%s\n" % ", ".join([str(ent[1]) for ent in res]))
+        res_file.close()
     return res
 
 def get_psycho(WR):
