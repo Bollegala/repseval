@@ -30,7 +30,7 @@ def eval_SemEval(WR, method):
     from semeval import SemEval
     S = SemEval(os.path.join(pkg_dir, "../benchmarks/semeval"))
     total_accuracy = 0
-    print "Total no. of instances in SemEval =", len(S.data)
+    print("Total no. of instances in SemEval =", len(S.data))
     for Q in S.data:
         scores = []
         for (first, second) in Q["wpairs"]:
@@ -53,7 +53,7 @@ def eval_SemEval(WR, method):
         score_file.close()
         total_accuracy += S.get_accuracy(score_fname, Q["filename"])
     acc = total_accuracy / float(len(S.data))
-    print "SemEval Accuracy =", acc
+    print("SemEval Accuracy =", acc)
     return acc
 
 
@@ -88,8 +88,8 @@ def eval_SAT_Analogies(WR, method):
             skipped += 1
     acc = float(100 * corrects) / float(total)
     coverage = 100.0 - (float(100 * skipped) / float(total))
-    print "SAT Accuracy = %f (%d / %d)" % (acc, corrects, total)
-    print "Qustion coverage = %f (skipped = %d)" % (coverage, skipped) 
+    print("SAT Accuracy = %f (%d / %d)" % (acc, corrects, total))
+    print("Qustion coverage = %f (skipped = %d)" % (coverage, skipped)) 
     return {"acc":acc, "coverage":coverage}
 
 
@@ -125,7 +125,7 @@ def eval_diff_vect(WR):
     preds = (-S).argsort()[:,1]
     corrects = sum([relation[pairs[i]] == relation[pairs[preds[i]]] for i in range(n)])
     accuracy = float(100 * corrects) / float(n)
-    print "DiffVec Accuracy =", accuracy
+    print("DiffVec Accuracy =", accuracy)
     return accuracy
 
 
@@ -155,10 +155,10 @@ def eval_Google_Analogies(WR, M, cands):
 
     valid_questions = sum([len(questions[label]) for label in questions])
 
-    print "== Google Analogy Dataset =="
-    print "Total no. of question types =", len(questions) 
-    print "Total no. of candidates =", len(cands)
-    print "Total no. of valid questions =", valid_questions
+    print("== Google Analogy Dataset ==")
+    print("Total no. of question types =", len(questions)) 
+    print("Total no. of candidates =", len(cands))
+    print("Total no. of valid questions =", valid_questions)
     
     # predict the fourth word for each question.
     count = 1
@@ -168,7 +168,7 @@ def eval_Google_Analogies(WR, M, cands):
         for (a,b,c,d) in questions[label]:
             total += 1
             acc = float(correct_count * 100) / float(total)
-            print "%d%% (%d / %d) acc = %2.2f%%" % ((100 * count) / float(valid_questions), count, valid_questions, acc), "\r", 
+            print("%d%% (%d / %d) acc = %2.2f%%" % ((100 * count) / float(valid_questions), count, valid_questions, acc), "\r",) 
             count += 1
             va = get_embedding(a, WR)
             vb = get_embedding(b, WR)
@@ -193,22 +193,22 @@ def eval_Google_Analogies(WR, M, cands):
         else:
             semantic_total += total_questions[label]
             semantic_corrects += corrects[label]
-    print "Percentage of questions attempted = %f (%d / %d)" % ((100 * valid_questions) /float(n), valid_questions, n)
+    print("Percentage of questions attempted = %f (%d / %d)" % ((100 * valid_questions) /float(n), valid_questions, n))
     for label in questions:
         if total_questions[label] != 0:
             acc = float(100 * corrects[label]) / float(total_questions[label])
         else:
             acc = 0
 
-        print "%s = %f (correct = %d, attempted = %d, total = %d)" % (
-            label, acc, corrects[label], len(questions[label]), total_questions[label])
+        print("%s = %f (correct = %d, attempted = %d, total = %d)" % (label, acc, corrects[label], len(questions[label]), total_questions[label]))
     semantic_accuracy = float(100 * semantic_corrects) / float(semantic_total)
     syntactic_accuracy = float(100 * syntactic_corrects) / float(syntactic_total)
     total_corrects = semantic_corrects + syntactic_corrects
     accuracy = float(100 * total_corrects) / float(n)
-    print "Semantic Accuracy =", semantic_accuracy 
-    print "Syntactic Accuracy =", syntactic_accuracy
-    print "Total accuracy =", accuracy
+
+    print("Semantic Accuracy =", semantic_accuracy) 
+    print("Syntactic Accuracy =", syntactic_accuracy)
+    print("Total accuracy =", accuracy)
     return {"semantic": semantic_accuracy, "syntactic":syntactic_accuracy, "total":accuracy}
 
 
@@ -232,14 +232,14 @@ def eval_MSR_Analogies(WR, M, cands):
             questions.append((p[0], p[1], p[2], p[3]))
     analogy_file.close()
 
-    print "== MSR Analogy Dataset =="
-    print "Total no. of valid questions =", len(questions)
-    print "Total no. of candidates =", len(cands)
+    print("== MSR Analogy Dataset ==")
+    print("Total no. of valid questions =", len(questions))
+    print("Total no. of candidates =", len(cands))
     
     # predict the fourth word for each question.
     count = 1
     for (a,b,c,d) in questions:
-        print "%d / %d" % (count, len(questions)), "\r", 
+        print("%d / %d" % (count, len(questions)), "\r",)
         count += 1
         # set of candidates for the current question are the fourth
         # words in all questions, except the three words for the current question.
@@ -253,7 +253,7 @@ def eval_MSR_Analogies(WR, M, cands):
         if d == nns[0]:
             corrects += 1
     accuracy = float(100 * corrects) / float(len(questions))
-    print "MSR accuracy =", accuracy
+    print("MSR accuracy =", accuracy)
     return accuracy
 
 
@@ -294,7 +294,7 @@ def eval_short_text_classification(bench_path, WR):
     LR.fit(train_X, train_y)
     #print numpy.mean([t == test_y[i] for (i,t) in enumerate(LR.predict(test_X))])
     acc = 100 * LR.score(test_X, test_y)
-    print "Accuracy for %s = %f" % (bench_path.split('/')[-1], acc)
+    print("Accuracy for %s = %f" % (bench_path.split('/')[-1], acc))
     return acc
 
 
@@ -397,7 +397,7 @@ def get_words_in_benchmarks():
     """
     Get the set of words in benchmarks.
     """
-    print "Collecting words from all benchmarks..."
+    print("Collecting words from all benchmarks...")
     words = set()
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]
     for bench in benchmarks:
@@ -561,16 +561,56 @@ def get_correlation(dataset_fname, vects, corr_measure):
     pass
 
 
-def evaluate_embed_matrix(embed_matrix, words, mode="all"):
+def evaluate_embed_matrix(WR, mode="all"):
     """
-    Directly evaluate the embedding in the matrix. embed_matrix is numpy.array of (n,d) where n is the number of words
-    and d is the dimensionality. words is a list of words in the order they appear in the rows of embed_matrix.
-    If mode="lex" we perform only semantic similarity benchmarks, "ana" perfom analogy and "all" perform everything.
-    Returns the results in a panda data frame.
+    Directly evaluate the embedding in the matrix. 
     """
-    print(" I got called")
-    pass
+    res = []
+    words = set()
+    with open(os.path.join(pkg_dir, "../benchmarks/all_words.txt"), encoding="utf-8", errors='ignore') as F:
+        for line in F:
+            words.add(line.strip())  
 
+    if "lex" in mode or "all" in mode:
+        # semantic similarity benchmarks.
+        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]  
+        for bench in benchmarks:
+            (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR, "spearman")
+            print("%s = %f" % (bench, corr))
+            res.append((bench, corr))
+
+    cands = list(words)
+    M = numpy.random.randn(len(cands), WR.dim)
+    for (i,w) in enumerate(cands):
+        if w in word_dic:
+            M[i,:] = normalize(embed_matrix[word_dic[w],:])
+
+    if "ana" in mode or "all" in mode:    
+        # word analogy benchmarks.
+        google = eval_Google_Analogies(h, M, cands)
+        res.append(("Google-semantic", google["semantic"]))
+        res.append(("Google-syntactic", google["syntactic"]))
+        res.append(("Google-total", google["total"]))
+        res.append(("MSR", eval_MSR_Analogies(WR, M, cands)))
+        res.append(("SemEval", eval_SemEval(WR, "CosAdd")))
+        res.append(("SAT", eval_SAT_Analogies(WR, "CosAdd")["acc"]))
+
+    if "rel" in mode or "all" in mode:
+        res.append(("DiffVec", eval_diff_vect(WR)))
+
+    if "txt" in mode or "all" in mode:    
+        # short text classification benchmarks.
+        res.append(("TR", eval_short_text_classification("../benchmarks/TR", WR)))
+        res.append(("MR", eval_short_text_classification("../benchmarks/MR", WR)))
+        res.append(("CR", eval_short_text_classification("../benchmarks/CR", WR)))
+        res.append(("SUBJ", eval_short_text_classification("../benchmarks/SUBJ", WR)))
+
+    if "psy" in mode or "all" in mode:
+        psy_corr = get_psycho(WR)
+        for rating_type in psy_corr:
+            res.append((rating_type, psy_corr[rating_type]))
+
+    return res
 
 def evaluate_embeddings(embed_fname, dim, res_fname=None, mode="all"):
     """
@@ -590,7 +630,7 @@ def evaluate_embeddings(embed_fname, dim, res_fname=None, mode="all"):
         benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]  
         for bench in benchmarks:
             (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
-            print "%s = %f" % (bench, corr)
+            print("%s = %f" % (bench, corr))
             res.append((bench, corr))
 
     cands = list(words)
@@ -685,7 +725,7 @@ def show_neighbors(fname, dim, nns):
         sys.stdout.write("Showing nearest neighbours for = %s\n" % query)
         if query in wids:
             for nn in indices[wids[query], 1:]:
-                print WR.vocab[nn]
+                print(WR.vocab[nn])
     pass
     
 
@@ -695,7 +735,7 @@ def conf_interval(r, num):
     delta = 1.96 * stderr
     lower = numpy.tanh(numpy.arctanh(r) - delta)
     upper = numpy.tanh(numpy.arctanh(r) + delta)
-    print "lower %.6f upper %.6f" % (lower, upper)
+    print("lower %.6f upper %.6f" % (lower, upper))
 
 
 def random_shuffle(input_fname, output_fname):
@@ -730,7 +770,7 @@ def main():
 
     if args.mode:
         mode = args.mode.split(',')   
-        print "Modes of operations =", mode
+        print("Modes of operations =", mode)
         if args.input and args.dim and mode[0] == "nns":
             show_neighbors(args.input, args.dim, 11)
         elif args.input and args.dim and args.output:

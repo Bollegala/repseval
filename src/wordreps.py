@@ -18,6 +18,17 @@ class WordReps:
         self.vector_size = None
         pass
 
+    def load_matirx(self, M, word_dic):
+        """
+        Loads data from a matrix M and a dictionary word_dic (key=word, value=row index)
+        """
+        self.vocab = list(word_dic.keys())
+        self.vector_size, self.dim = M.shape
+        self.vects = {}
+        for word in word_dic:
+            self.vects[word] = M[word_dic[word],:]
+        pass
+
 
     def read_model(self, fname, dim, words=None, HEADER=False, case_sensitive=False):
         """
@@ -103,8 +114,8 @@ class WordReps:
         vocab_size, vector_size = map(int, header.split())
         vocab = []
         vects = {}
-        print "Vocabulary size =", vocab_size
-        print "Vector size =", vector_size
+        print("Vocabulary size =", vocab_size)
+        print("Vector size =", vector_size)
         assert(dim == vector_size)
         binary_len = numpy.dtype(numpy.float32).itemsize * vector_size
         for line_number in xrange(vocab_size):
@@ -150,7 +161,7 @@ class WordReps:
         C = self.get_vect("woman")
         D = self.get_vect("queen")
         x = B - A + C
-        print cosine(x, D)
+        print(cosine(x, D))
         pass   
 
 
