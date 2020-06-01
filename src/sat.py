@@ -109,7 +109,7 @@ def dump_word_pairs(fname):
             id += 1
             H[(A,B)] = 1
         else:
-            print A, B
+            print(A, B)
             duplicates += 1
         for (C,D) in L[i]["CHOICES"]:
             C = C['word']
@@ -119,7 +119,7 @@ def dump_word_pairs(fname):
                 id += 1
                 H[(C,D)] = 1
             else:
-                print C, D
+                print(C, D)
                 duplicates += 1
     sat_pairs.close()
     pass
@@ -131,8 +131,8 @@ def main():
     """
     S = SAT()
     L = S.getQuestions()
-    print L[0]
-    print len(L)
+    print(L[0])
+    print(len(L))
     pass
 
 if __name__ == "__main__":

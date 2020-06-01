@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 """
-Perform evaluations of the word representations using three analogy datasets:
-Mikolov (Google + MSRA), SAT, and SemEval.
-and various semantic similarity datasets such as WS353, RG, MC, SCWC, RW, MEN.
+Perform evaluations of the word representations using the following tasks:
+    1. word similarity prediction
+    2. word analogy prediction
+    3. relation prediction
+    4. short text classification
+    5. psycholinguistic score prediction
+    6. sentence-level evaluations (uses SentEval)
 """
 
 import numpy
@@ -11,6 +15,7 @@ import collections
 import argparse
 import os
 import scipy.stats
+import bow_senteval
 
 
 from wordreps import WordReps, get_embedding, cosine, normalize
@@ -28,7 +33,7 @@ def eval_SemEval(WR, method):
     Answer SemEval questions. 
     """
     from semeval import SemEval
-    S = SemEval(os.path.join(pkg_dir, "../benchmarks/semeval"))
+    S = SemEval(pkg_dir)
     total_accuracy = 0
     print("Total no. of instances in SemEval =", len(S.data))
     for Q in S.data:
@@ -45,7 +50,7 @@ def eval_SemEval(WR, method):
             scores.append(((first, second), val))
 
         # sort the scores and write to a file. 
-        scores.sort(lambda x, y: -1 if x[1] > y[1] else 1)
+        scores = sorted(scores, key=lambda x: -x[1])
         score_fname = os.path.join(pkg_dir, "../work/semeval/%s.txt" % Q["filename"])
         score_file = open(score_fname, 'w')
         for ((first, second), score) in scores:
@@ -168,7 +173,7 @@ def eval_Google_Analogies(WR, M, cands):
         for (a,b,c,d) in questions[label]:
             total += 1
             acc = float(correct_count * 100) / float(total)
-            print("%d%% (%d / %d) acc = %2.2f%%" % ((100 * count) / float(valid_questions), count, valid_questions, acc), "\r",) 
+            print("%d%% (%d / %d) acc = %2.2f%%" % ((100 * count) / float(valid_questions), count, valid_questions, acc), end="\r",) 
             count += 1
             va = get_embedding(a, WR)
             vb = get_embedding(b, WR)
@@ -176,7 +181,7 @@ def eval_Google_Analogies(WR, M, cands):
             x = normalize(vb - va + vc)
             s = numpy.dot(M, x)
             nns = [cands[i] for i in numpy.argsort(-s)]
-            nns = filter(lambda y: y not in [a, b, c], nns)
+            nns = list(filter(lambda y: y not in [a, b, c], nns))
             #print "Question: ", a, b, c, d, numpy.sum(x)
             if d == nns[0]:
                 corrects[label] += 1
@@ -239,7 +244,7 @@ def eval_MSR_Analogies(WR, M, cands):
     # predict the fourth word for each question.
     count = 1
     for (a,b,c,d) in questions:
-        print("%d / %d" % (count, len(questions)), "\r",)
+        print("%d / %d" % (count, len(questions)), end="\r")
         count += 1
         # set of candidates for the current question are the fourth
         # words in all questions, except the three words for the current question.
@@ -249,7 +254,7 @@ def eval_MSR_Analogies(WR, M, cands):
         x = normalize(vb - va + vc)
         s = numpy.dot(M, x)
         nns = [cands[i] for i in (-s).argsort()]
-        nns = filter(lambda y: y not in [a, b, c], nns)
+        nns = list(filter(lambda y: y not in [a, b, c], nns))
         if d == nns[0]:
             corrects += 1
     accuracy = float(100 * corrects) / float(len(questions))
@@ -268,7 +273,7 @@ def eval_short_text_classification(bench_path, WR):
     #print "Short text classification for: ", bench_path
     train_X = []
     train_y = []
-    with open("%s/train" % bench_path) as train_file:
+    with open("%s/train" % bench_path, encoding="utf-8", errors="ignore") as train_file:
         for line in train_file:
             p = line.strip().split()
             train_y.append(int(p[0]))
@@ -276,7 +281,7 @@ def eval_short_text_classification(bench_path, WR):
 
     test_X = []
     test_y = []        
-    with open("%s/test" % bench_path) as test_file:
+    with open("%s/test" % bench_path, encoding="utf-8", errors="ignore") as test_file:
         for line in test_file:
             p = line.strip().split()
             test_y.append(int(p[0]))
@@ -290,7 +295,7 @@ def eval_short_text_classification(bench_path, WR):
     #print "Total no. of train instances", train_X.shape[0]
     #print "Total no. of test instances ", test_X.shape[0]
 
-    LR = LogisticRegression(penalty='l2', C=1.0)
+    LR = LogisticRegression(penalty='l2', C=1.0, max_iter=10000)
     LR.fit(train_X, train_y)
     #print numpy.mean([t == test_y[i] for (i,t) in enumerate(LR.predict(test_X))])
     acc = 100 * LR.score(test_X, test_y)
@@ -399,6 +404,7 @@ def get_words_in_benchmarks():
     """
     print("Collecting words from all benchmarks...")
     words = set()
+    
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]
     for bench in benchmarks:
         with open("../benchmarks/%s_pairs.txt" % bench) as F:
@@ -407,78 +413,85 @@ def get_words_in_benchmarks():
                 words.add(p[0])
                 words.add(p[1])
 
-    # Get words in Google analogies.
-    analogy_file = open("../benchmarks/google-analogies.txt")
-    while 1:
-        line = analogy_file.readline()
-        if len(line) == 0:
-            break
-        if line.startswith(':'):  # This is a label 
-            label = line.split(':')[1].strip()
-        else:
+    if 1:
+        # Get words in Google analogies.
+        analogy_file = open("../benchmarks/google-analogies.txt")
+        while 1:
+            line = analogy_file.readline()
+            if len(line) == 0:
+                break
+            if line.startswith(':'):  # This is a label 
+                label = line.split(':')[1].strip()
+            else:
+                p = line.strip().split()
+                words.add(p[0])
+                words.add(p[1])
+                words.add(p[2])
+                words.add(p[3])
+        analogy_file.close()
+
+    if 1:
+        # Get words in MSR analogies.
+        analogy_file = open("../benchmarks/msr-analogies.txt")
+        while 1:
+            line = analogy_file.readline()
             p = line.strip().split()
+            if len(p) == 0:
+                break
             words.add(p[0])
             words.add(p[1])
             words.add(p[2])
             words.add(p[3])
-    analogy_file.close()
+        analogy_file.close()
 
-    # Get words in MSR analogies.
-    analogy_file = open("../benchmarks/msr-analogies.txt")
-    while 1:
-        line = analogy_file.readline()
-        p = line.strip().split()
-        if len(p) == 0:
-            break
-        words.add(p[0])
-        words.add(p[1])
-        words.add(p[2])
-        words.add(p[3])
-    analogy_file.close()
+    if 1:
+        # Get words in DiffVect dataset.
+        diff_vect_file = open("../benchmarks/diff-vec")
+        for line in diff_vect_file:
+            if not line.startswith(':'):
+                p = line.strip().split()
+                words.add(p[0])
+                words.add(p[1])
+        diff_vect_file.close()
 
-    # Get words in DiffVect dataset.
-    diff_vect_file = open("../benchmarks/diff-vec")
-    for line in diff_vect_file:
-        if not line.startswith(':'):
-            p = line.strip().split()
-            words.add(p[0])
-            words.add(p[1])
-    diff_vect_file.close()
+    if 1:
+        # Get SAT words.
+        from sat import SAT
+        S = SAT()
+        questions = S.getQuestions()
+        for Q in questions:
+            (q_first, q_second) = Q['QUESTION']
+            words.add(q_first['word'])
+            words.add(q_second['word'])
+            for (i, (c_first, c_second)) in enumerate(Q["CHOICES"]):
+                words.add(c_first['word'])
+                words.add(c_second['word'])
 
-    # Get SAT words.
-    from sat import SAT
-    S = SAT()
-    questions = S.getQuestions()
-    for Q in questions:
-        (q_first, q_second) = Q['QUESTION']
-        words.add(q_first['word'])
-        words.add(q_second['word'])
-        for (i, (c_first, c_second)) in enumerate(Q["CHOICES"]):
-            words.add(c_first['word'])
-            words.add(c_second['word'])
+    if 1:
+        # Get SemEval words.
+        from semeval import SemEval
+        S = SemEval("../benchmarks/semeval")
+        for Q in S.data:
+            for (first, second) in Q["wpairs"]:
+                words.add(first)
+                words.add(second)
+                for (p_first, p_second) in Q["paradigms"]:
+                    words.add(p_first)
+                    words.add(p_second)
 
-    # Get SemEval words.
-    from semeval import SemEval
-    S = SemEval("../benchmarks/semeval")
-    for Q in S.data:
-        for (first, second) in Q["wpairs"]:
-            words.add(first)
-            words.add(second)
-            for (p_first, p_second) in Q["paradigms"]:
-                words.add(p_first)
-                words.add(p_second)
+    if 1:
+        #Get text classification datasets.
+        for dataset in ["CR", "MR", "SUBJ", "TR"]:
+            words = words.union(get_words_short_text("../benchmarks/%s/train" % dataset))
+            words = words.union(get_words_short_text("../benchmarks/%s/test" % dataset))
 
-    # Get text classification datasets.
-    for dataset in ["CR", "MR", "SUBJ", "TR"]:
-        words = words.union(get_words_short_text("../benchmarks/%s/train" % dataset))
-        words = words.union(get_words_short_text("../benchmarks/%s/test" % dataset))
-
-    # Get Psycholinguistic ratings datasets.
-    with open("../benchmarks/psycho.csv") as data_file:
-        for line in data_file:
-            p = line.strip().split(',')
-            word = p[0].strip()
-            words.add(word)
+    if 1:
+        # Get Psycholinguistic ratings datasets.
+        with open("../benchmarks/psycho.csv") as data_file:
+            for line in data_file:
+                p = line.strip().split(',')
+                word = p[0].strip()
+                words.add(word)
 
     with open("../benchmarks/all_words.txt", 'w') as G:
         for word in words:
@@ -490,7 +503,7 @@ def get_words_short_text(fname):
     Return the set of words in train/test files in short-text classification datasets
     """
     feats = set()
-    with open(fname) as F:
+    with open(fname, encoding="utf-8", errors="ignore") as F:
         for line in F:
             p = line.strip().split()
             for ent in p[1:]:
@@ -565,110 +578,79 @@ def evaluate_embed_matrix(WR, mode="all"):
     """
     Directly evaluate the embedding in the matrix. 
     """
-    res = []
-    words = set()
-    with open(os.path.join(pkg_dir, "../benchmarks/all_words.txt"), encoding="utf-8", errors='ignore') as F:
-        for line in F:
-            words.add(line.strip())  
-
-    if "lex" in mode or "all" in mode:
-        # semantic similarity benchmarks.
-        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]  
-        for bench in benchmarks:
-            (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR, "spearman")
-            print("%s = %f" % (bench, corr))
-            res.append((bench, corr))
-
-    cands = list(words)
-    M = numpy.random.randn(len(cands), WR.dim)
-    for (i,w) in enumerate(cands):
-        if w in word_dic:
-            M[i,:] = normalize(embed_matrix[word_dic[w],:])
-
-    if "ana" in mode or "all" in mode:    
-        # word analogy benchmarks.
-        google = eval_Google_Analogies(h, M, cands)
-        res.append(("Google-semantic", google["semantic"]))
-        res.append(("Google-syntactic", google["syntactic"]))
-        res.append(("Google-total", google["total"]))
-        res.append(("MSR", eval_MSR_Analogies(WR, M, cands)))
-        res.append(("SemEval", eval_SemEval(WR, "CosAdd")))
-        res.append(("SAT", eval_SAT_Analogies(WR, "CosAdd")["acc"]))
-
-    if "rel" in mode or "all" in mode:
-        res.append(("DiffVec", eval_diff_vect(WR)))
-
-    if "txt" in mode or "all" in mode:    
-        # short text classification benchmarks.
-        res.append(("TR", eval_short_text_classification("../benchmarks/TR", WR)))
-        res.append(("MR", eval_short_text_classification("../benchmarks/MR", WR)))
-        res.append(("CR", eval_short_text_classification("../benchmarks/CR", WR)))
-        res.append(("SUBJ", eval_short_text_classification("../benchmarks/SUBJ", WR)))
-
-    if "psy" in mode or "all" in mode:
-        psy_corr = get_psycho(WR)
-        for rating_type in psy_corr:
-            res.append((rating_type, psy_corr[rating_type]))
-
-    return res
-
-def evaluate_embeddings(embed_fname, dim, res_fname=None, mode="all"):
-    """
-    This function can be used to evaluate an embedding.
-    """
-    res = []
-    WR = WordReps()
-    # We will load vectors only for the words in the benchmarks.
-    words = set()
-    with open(os.path.join(pkg_dir, "../benchmarks/all_words.txt")) as F:
-        for line in F:
-            words.add(line.strip())
-    WR.read_model(embed_fname, dim, words, case_sensitive=True)
-
+    res = {}
     if "lex" in mode or "all" in mode:
         # semantic similarity benchmarks.
         benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]  
         for bench in benchmarks:
             (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
             print("%s = %f" % (bench, corr))
-            res.append((bench, corr))
+            res[bench] = corr
 
-    cands = list(words)
-    M = numpy.zeros((len(cands), WR.dim), dtype=numpy.float64)
-    for (i,w) in enumerate(cands):
-        M[i,:] = normalize(get_embedding(w, WR))    
+    M = numpy.random.randn(len(WR.vocab), WR.dim)
+    for (i,w) in enumerate(WR.vocab):
+        M[i,:] = normalize(get_embedding(w, WR))   
 
     if "ana" in mode or "all" in mode:    
         # word analogy benchmarks.
-        google = eval_Google_Analogies(WR, M, cands)
-        res.append(("Google-semantic", google["semantic"]))
-        res.append(("Google-syntactic", google["syntactic"]))
-        res.append(("Google-total", google["total"]))
-        res.append(("MSR", eval_MSR_Analogies(WR, M, cands)))
-        res.append(("SemEval", eval_SemEval(WR, "CosAdd")))
-        res.append(("SAT", eval_SAT_Analogies(WR, "CosAdd")["acc"]))
+        google = eval_Google_Analogies(WR, M, WR.vocab)
+        res["Google-semantic"] = google["semantic"]
+        res["Google-syntactic"] = google["syntactic"]
+        res["Google-total"] = google["total"]
+        res["MSR"] = eval_MSR_Analogies(WR, M, WR.vocab)
+        #res["SemEval"] = eval_SemEval(WR, "CosAdd")
+        res["SAT"] = eval_SAT_Analogies(WR, "CosAdd")["acc"]
 
     if "rel" in mode or "all" in mode:
-        res.append(("DiffVec", eval_diff_vect(WR)))
+        res["DiffVec"] = eval_diff_vect(WR)
 
     if "txt" in mode or "all" in mode:    
         # short text classification benchmarks.
-        res.append(("TR", eval_short_text_classification("../benchmarks/TR", WR)))
-        res.append(("MR", eval_short_text_classification("../benchmarks/MR", WR)))
-        res.append(("CR", eval_short_text_classification("../benchmarks/CR", WR)))
-        res.append(("SUBJ", eval_short_text_classification("../benchmarks/SUBJ", WR)))
+        res["TR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/TR"), WR)
+        res["MR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/MR"), WR)
+        res["CR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/CR"), WR)
+        res["SUBJ"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/SUBJ"), WR)
+    
+    if "sent" in mode or "all" in mode:
+        # create BoW sentence embeddings and use SentEval for evaluation.
+        prediction_tasks = ['MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC', 'SICKEntailment']# 'ImageCaptionRetrieval']
+        correlation_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'STSBenchmark', 'SICKRelatedness']
+        probing_tasks = ['Length', 'WordContent', 'Depth', 'TopConstituents', 
+                        'BigramShift', 'SubjNumber', 'ObjNumber', 'OddManOut', 'CoordinationInversion']
+        prediction_tasks.extend(probing_tasks)
+        tasks = prediction_tasks[:]
+        tasks.extend(correlation_tasks)
+        sent_res = bow_senteval.evaluate_bow_sent_embeds(WR, tasks)
+        for task in prediction_tasks:
+            if task in tasks:
+                res[task] = sent_res[task]["acc"]
+                #print(sent_res[task]["acc"])
+        for task in correlation_tasks:
+            if task in tasks:
+                if task in ["SICKRelatedness", "STSBenchmark"]:
+                    res[task] = sent_res[task]["spearman"]
+                else:
+                    res[task] = sent_res[task]["all"]["spearman"]["wmean"]
+                #print(sent_res[task]["all"]["spearman"])
+                #"spearman" : evaluation[task]["all"]["spearman"]}       
 
-    if "psy" in mode or "all" in mode:
-        psy_corr = get_psycho(WR)
-        for rating_type in psy_corr:
-            res.append((rating_type, psy_corr[rating_type]))
 
-    if res_file is None:
-        res_file = open(res_fname, 'w')
-        res_file.write("# %s\n" % ", ".join([ent[0] for ent in res]))
-        res_file.write("%s\n" % ", ".join([str(ent[1]) for ent in res]))
-        res_file.close()
+    #if "psy" in mode or "all" in mode:
+    #    psy_corr = get_psycho(WR)
+    #    for rating_type in psy_corr:
+    #        res[rating_type] = psy_corr[rating_type]
+
     return res
+
+def evaluate_embeddings(embed_fname, dim, mode="all"):
+    """
+    This function can be used to evaluate an embedding.
+    """
+    res = {}
+    WR = WordReps()
+    WR.read_model(embed_fname, dim, case_sensitive=True)
+    return evaluate_embed_matrix(WR, mode)
+
 
 def get_psycho(WR):
     """
@@ -680,7 +662,7 @@ def get_psycho(WR):
     words = []
     X = []
     res = {}
-    with open("../benchmarks/psycho.csv") as data_file:
+    with open(os.path.join(pkg_dir, "../benchmarks/psycho.csv")) as data_file:
         data_file.readline()
         for line in data_file:
             p = line.strip().split(',')
@@ -781,9 +763,9 @@ def main():
 
 
 if __name__ == "__main__":
-    #get_words_in_benchmarks()
+    get_words_in_benchmarks()
     #random_shuffle("../benchmarks/psycho.csv", "../benchmarks/random_psycho.csv")
-    main()
+    #main()
    
     
     

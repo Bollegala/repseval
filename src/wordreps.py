@@ -18,7 +18,7 @@ class WordReps:
         self.vector_size = None
         pass
 
-    def load_matirx(self, M, word_dic):
+    def load_matrix(self, M, word_dic):
         """
         Loads data from a matrix M and a dictionary word_dic (key=word, value=row index)
         """
@@ -27,6 +27,15 @@ class WordReps:
         self.vects = {}
         for word in word_dic:
             self.vects[word] = M[word_dic[word],:]
+        pass
+
+    def save_model(self, fname):
+        """
+        Save the embeddings to fname.
+        """
+        with open(fname, 'w') as F:
+            for w in self.vects:
+                F.write("%s %s\n" % (w, " ".join([str(x) for x in self.vects[w]])))
         pass
 
 

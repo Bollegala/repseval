@@ -10,11 +10,11 @@ import string
 import subprocess
 import os
 
-
 class SemEval:
 
-    def __init__(self, data_path):
-        self.data_path = data_path 
+    def __init__(self, pkg_dir):
+        #self.data_path = os.path.join(pkg_dir, "../benchmarks/semeval")
+        self.data_path = pkg_dir
         self.load_dataset()
         pass
 
@@ -25,10 +25,10 @@ class SemEval:
         """
         # Load sub-categories and paradigms.
         self.data = []
-        subcat_file = open("%s/subcategories-paradigms.txt" % self.data_path)
+        subcat_file = open("%s/../benchmarks/semeval/subcategories-paradigms.txt" % self.data_path)
         for line in subcat_file:
             relation = {}
-            p = map(string.strip, line.strip().split(','))
+            p = [x.strip() for x in line.strip().split(',')]
             relation["filename"] = "%s%s" % (p[0], p[1])
             relation["category"] = p[2]
             relation["sub-category"] = p[3]
@@ -37,8 +37,8 @@ class SemEval:
         subcat_file.close()
         # load word pairs for each relation.
         for Q in self.data:
-            wpair_file = open("%s/Phase1Answers/Phase1Answers-%s.txt" % (self.data_path, Q["filename"]))
-            Q["wpairs"] = [tuple(map(string.strip, line.strip().replace('"', '').split(':'))) for line in wpair_file]
+            wpair_file = open("%s/../benchmarks/semeval/Phase1Answers/Phase1Answers-%s.txt" % (self.data_path, Q["filename"]))
+            Q["wpairs"] = [tuple([x.strip() for x in line.strip().replace('"', '').split(':')]) for line in wpair_file]
             wpair_file.close()
         pass
 
@@ -48,20 +48,23 @@ class SemEval:
         Evaluate the result. 
         """
         acc = None
-        subprocess.call("sh semeval.sh %s %s %s > /dev/null" % (fname, file_id, self.data_path), shell=True)
-        F = open("../work/semeval-tmp/MaxDiffFinal-%s.txt" % file_id)
+        #print("sh %s/semeval.sh %s %s %s/../benchmarks/semeval > /dev/null" % (self.data_path, fname, file_id, self.data_path))
+        #subprocess.call("sh %s/semeval.sh %s %s %s > /dev/null" % (self.pkg_dir, fname, file_id, self.data_path), shell=True)
+
+        subprocess.call("sh %s/semeval.sh %s %s %s > /dev/null" % (self.data_path, fname, file_id, self.data_path), shell=True)
+        F = open("%s/../work/semeval-tmp/MaxDiffFinal-%s.txt" % (self.data_path, file_id))
         for line in F:
             if line.startswith("Overall Accuracy:"):
                 acc = float(line.strip().split(':')[1].split('%')[0])
         F.close()
         if acc is None:
-            raise "Could not read accuracy from file = %s" % fname, ValueError
+            raise("Could not read accuracy from file = %s" % fname, ValueError)
         return acc
 
 
 def process():
     S = SemEval("../benchmarks/semeval")
-    print S.data[0]["wpairs"]
+    print(S.data[0]["wpairs"])
     pass
 
 
