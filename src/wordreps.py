@@ -39,7 +39,7 @@ class WordReps:
         pass
 
 
-    def read_model(self, fname, dim, words=None, HEADER=False, case_sensitive=False):
+    def read_model(self, fname, dim=None, words=None, HEADER=False, case_sensitive=False):
         """
         Read the word vectors where the first token is the word.
         """
@@ -54,11 +54,15 @@ class WordReps:
             res["edges"] = int(F.readline().split('=')[1])
             res["labels"] = int(F.readline().split('=')[1])
             R = res["rank"]
-        R = dim
         # read the vectors.
         vects = {}
         vocab = []
         line = F.readline()
+        # guess the dimension. If it is not given use the guessed value.
+        # if the guessed value is different from the given value raise and error.
+        R = len(line.strip().split()) - 1
+        if dim is not None:
+            assert(R == dim)
 
         # Check whether the first line contains the number of words and the dimensionality.
         # If so, skip it.

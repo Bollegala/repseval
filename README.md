@@ -76,4 +76,19 @@ This is a csv file.
 We use the input word embeddings in a neural network (containing a single hidden layer of 100 neurons and relu activation) to learn a regression model (no activation in the output layer). We use randomly selected 80% of words from MRC database and ANEW dataset to train a regression model for valence, arousal, dominance, concreteness and imageability.  We then measure the Pearson correlation between the predicted ratings and human ratings and report the corresponding correlation coefficients.
 See Section 4.2 of [this](https://arxiv.org/abs/1709.01186#) paper for further details regarding this setting.
 
+### Part of Speech Tagging
+`pos.py` in the `./src` directory can be used to evaluate pretrained word embeddings for Part-of-Speech (PoS) on the CoNLL-2003 dataset. Specifically, we train an LSTM initialised with pretrained word embeddings, followed by a hidden layer (default to 100 dimensions) and a softmax layer that predicts a word into one of the 47 PoS tags. The LSTM is trained on the standard train split of the CoNLL-2003 dataset and evaluated on the standard test split of the same. Accuracy (fraction of correctly PoS predicted tokens), macro-averaged precision, recall, F scores over the 47 PoS categories are reported as the evaluation metrics.
+
+The script depends on various packages which could be installed via pip as follows
+```
+pip install -r requirements.txt
+```
+Then, you can evaluate a pretrained word embedding (in a text file `embed_fname` in the `gensim` format, where the first line contains two numbers -- the number of words and dimensionality) and the dimensionality of the embedding `dim` as follows:
+```
+python pos.py -d dim -f embed_fname
+```
+
+
+
+
 

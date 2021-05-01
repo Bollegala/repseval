@@ -1,0 +1,10 @@
+numpy
+tqdm
+torch
+gensim
+tabulate
+pandas
+datasets
+sklearn
+python-Levenshtein
+scipy

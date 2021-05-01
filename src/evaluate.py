@@ -405,7 +405,7 @@ def get_words_in_benchmarks():
     print("Collecting words from all benchmarks...")
     words = set()
     
-    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]
+    benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "simverb", "behavior", "mturk-771"]
     for bench in benchmarks:
         with open("../benchmarks/%s_pairs.txt" % bench) as F:
             for line in F:
@@ -581,7 +581,7 @@ def evaluate_embed_matrix(WR, mode="all"):
     res = {}
     if "lex" in mode or "all" in mode:
         # semantic similarity benchmarks.
-        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "behavior", "mturk-771"]  
+        benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "simverb", "behavior", "mturk-771"]  
         for bench in benchmarks:
             (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
             print("%s = %f" % (bench, corr))
