@@ -15,10 +15,14 @@ import collections
 import argparse
 import os
 import scipy.stats
+import pandas as pd
+import glob
+from tabulate import tabulate
 import bow_senteval
 
 
 from wordreps import WordReps, get_embedding, cosine, normalize
+import pos
 
 pkg_dir = os.path.dirname(os.path.abspath(__file__))
 VERBOSE = False
@@ -51,13 +55,13 @@ def eval_SemEval(WR, method):
 
         # sort the scores and write to a file. 
         scores = sorted(scores, key=lambda x: -x[1])
-        score_fname = os.path.join(pkg_dir, "../work/semeval/%s.txt" % Q["filename"])
+        score_fname = os.path.join(pkg_dir, "./work/semeval/%s.txt" % Q["filename"])
         score_file = open(score_fname, 'w')
         for ((first, second), score) in scores:
             score_file.write('%f "%s:%s"\n' % (score, first, second))
         score_file.close()
         total_accuracy += S.get_accuracy(score_fname, Q["filename"])
-    acc = total_accuracy / float(len(S.data))
+    acc = 0 if len(S.data) == 0 else total_accuracy / float(len(S.data))
     print("SemEval Accuracy =", acc)
     return acc
 
@@ -106,7 +110,7 @@ def eval_diff_vect(WR):
     If the 1-NN has the same relation label as the target pair, then we consider it to
     be a correct match. We compute accuracy = correct_matches / total_instances.
     """
-    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/diff-vec"))
+    analogy_file = open(os.path.join(pkg_dir, "./benchmarks/diff-vec"))
     relation = {}
     pairs = []
     label = ""
@@ -138,7 +142,7 @@ def eval_Google_Analogies(WR, M, cands):
     """
     Evaluate the accuracy of the learnt vectors on the analogy task. 
     """
-    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/google-analogies.txt"))
+    analogy_file = open(os.path.join(pkg_dir, "./benchmarks/google-analogies.txt"))
     questions = collections.OrderedDict()
     total_questions = {}
     corrects = {}
@@ -198,7 +202,7 @@ def eval_Google_Analogies(WR, M, cands):
         else:
             semantic_total += total_questions[label]
             semantic_corrects += corrects[label]
-    print("Percentage of questions attempted = %f (%d / %d)" % ((100 * valid_questions) /float(n), valid_questions, n))
+    if n > 0: print("Percentage of questions attempted = %f (%d / %d)" % ((100 * valid_questions) /float(n), valid_questions, n))
     for label in questions:
         if total_questions[label] != 0:
             acc = float(100 * corrects[label]) / float(total_questions[label])
@@ -206,10 +210,10 @@ def eval_Google_Analogies(WR, M, cands):
             acc = 0
 
         print("%s = %f (correct = %d, attempted = %d, total = %d)" % (label, acc, corrects[label], len(questions[label]), total_questions[label]))
-    semantic_accuracy = float(100 * semantic_corrects) / float(semantic_total)
-    syntactic_accuracy = float(100 * syntactic_corrects) / float(syntactic_total)
+    semantic_accuracy = 0 if semantic_total == 0 else float(100 * semantic_corrects) / float(semantic_total)
+    syntactic_accuracy = 0 if syntactic_total == 0 else float(100 * syntactic_corrects) / float(syntactic_total)
     total_corrects = semantic_corrects + syntactic_corrects
-    accuracy = float(100 * total_corrects) / float(n)
+    accuracy = 0 if n == 0 else float(100 * total_corrects) / float(n)
 
     print("Semantic Accuracy =", semantic_accuracy) 
     print("Syntactic Accuracy =", syntactic_accuracy)
@@ -223,7 +227,7 @@ def eval_MSR_Analogies(WR, M, cands):
     We consider the set of fourth words in the test dataset as the
     candidate space for the correct answer.
     """
-    analogy_file = open(os.path.join(pkg_dir, "../benchmarks/msr-analogies.txt"))
+    analogy_file = open(os.path.join(pkg_dir, "./benchmarks/msr-analogies.txt"))
     questions = []
     total_questions = 0
     corrects = 0
@@ -257,7 +261,7 @@ def eval_MSR_Analogies(WR, M, cands):
         nns = list(filter(lambda y: y not in [a, b, c], nns))
         if d == nns[0]:
             corrects += 1
-    accuracy = float(100 * corrects) / float(len(questions))
+    accuracy = 0 if len(questions) == 0 else float(100 * corrects) / float(len(questions))
     print("MSR accuracy =", accuracy)
     return accuracy
 
@@ -407,7 +411,7 @@ def get_words_in_benchmarks():
     
     benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "simverb", "behavior", "mturk-771"]
     for bench in benchmarks:
-        with open("../benchmarks/%s_pairs.txt" % bench) as F:
+        with open("./benchmarks/%s_pairs.txt" % bench) as F:
             for line in F:
                 p = line.strip().split()
                 words.add(p[0])
@@ -415,7 +419,7 @@ def get_words_in_benchmarks():
 
     if 1:
         # Get words in Google analogies.
-        analogy_file = open("../benchmarks/google-analogies.txt")
+        analogy_file = open("./benchmarks/google-analogies.txt")
         while 1:
             line = analogy_file.readline()
             if len(line) == 0:
@@ -432,7 +436,7 @@ def get_words_in_benchmarks():
 
     if 1:
         # Get words in MSR analogies.
-        analogy_file = open("../benchmarks/msr-analogies.txt")
+        analogy_file = open("./benchmarks/msr-analogies.txt")
         while 1:
             line = analogy_file.readline()
             p = line.strip().split()
@@ -446,7 +450,7 @@ def get_words_in_benchmarks():
 
     if 1:
         # Get words in DiffVect dataset.
-        diff_vect_file = open("../benchmarks/diff-vec")
+        diff_vect_file = open("./benchmarks/diff-vec")
         for line in diff_vect_file:
             if not line.startswith(':'):
                 p = line.strip().split()
@@ -482,18 +486,18 @@ def get_words_in_benchmarks():
     if 1:
         #Get text classification datasets.
         for dataset in ["CR", "MR", "SUBJ", "TR"]:
-            words = words.union(get_words_short_text("../benchmarks/%s/train" % dataset))
-            words = words.union(get_words_short_text("../benchmarks/%s/test" % dataset))
+            words = words.union(get_words_short_text("./benchmarks/%s/train" % dataset))
+            words = words.union(get_words_short_text("./benchmarks/%s/test" % dataset))
 
     if 1:
         # Get Psycholinguistic ratings datasets.
-        with open("../benchmarks/psycho.csv") as data_file:
+        with open("./benchmarks/psycho.csv") as data_file:
             for line in data_file:
                 p = line.strip().split(',')
                 word = p[0].strip()
                 words.add(word)
 
-    with open("../benchmarks/all_words.txt", 'w') as G:
+    with open("./benchmarks/all_words.txt", 'w') as G:
         for word in words:
             G.write("%s\n" % word)
     pass
@@ -583,7 +587,7 @@ def evaluate_embed_matrix(WR, mode="all"):
         # semantic similarity benchmarks.
         benchmarks = ["ws", "rg", "mc", "rw", "scws", "men", "simlex", "simverb", "behavior", "mturk-771"]  
         for bench in benchmarks:
-            (corr, sig) = get_correlation(os.path.join(pkg_dir, "../benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
+            (corr, sig) = get_correlation(os.path.join(pkg_dir, "./benchmarks/%s_pairs.txt" % bench), WR.vects, "spearman")
             print("%s = %f" % (bench, corr))
             res[bench] = corr
 
@@ -606,10 +610,10 @@ def evaluate_embed_matrix(WR, mode="all"):
 
     if "txt" in mode or "all" in mode:    
         # short text classification benchmarks.
-        res["TR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/TR"), WR)
-        res["MR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/MR"), WR)
-        res["CR"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/CR"), WR)
-        res["SUBJ"] = eval_short_text_classification(os.path.join(pkg_dir, "../benchmarks/SUBJ"), WR)
+        res["TR"] = eval_short_text_classification(os.path.join(pkg_dir, "./benchmarks/TR"), WR)
+        res["MR"] = eval_short_text_classification(os.path.join(pkg_dir, "./benchmarks/MR"), WR)
+        res["CR"] = eval_short_text_classification(os.path.join(pkg_dir, "./benchmarks/CR"), WR)
+        res["SUBJ"] = eval_short_text_classification(os.path.join(pkg_dir, "./benchmarks/SUBJ"), WR)
     
     if "sent" in mode or "all" in mode:
         # create BoW sentence embeddings and use SentEval for evaluation.
@@ -635,14 +639,19 @@ def evaluate_embed_matrix(WR, mode="all"):
                 #"spearman" : evaluation[task]["all"]["spearman"]}       
 
 
-    #if "psy" in mode or "all" in mode:
-    #    psy_corr = get_psycho(WR)
-    #    for rating_type in psy_corr:
-    #        res[rating_type] = psy_corr[rating_type]
-
+    if "psy" in mode or "all" in mode:
+        psy_corr = get_psycho(WR)
+        for rating_type in psy_corr:
+            res[rating_type] = psy_corr[rating_type]
     return res
 
-def evaluate_embeddings(embed_fname, dim, mode="all"):
+def evaluate_pos(embed_fname):
+    """
+    Evaluate for POS tagging on CoNLL-2003.
+    """
+    return pos.process(embed_fname, pos.guess_dim(embed_fname))
+
+def evaluate_embedding(embed_fname, dim, mode="all"):
     """
     This function can be used to evaluate an embedding.
     """
@@ -651,6 +660,21 @@ def evaluate_embeddings(embed_fname, dim, mode="all"):
     WR.read_model(embed_fname, dim, case_sensitive=True)
     return evaluate_embed_matrix(WR, mode)
 
+def eval_all(embed_fnames, mode, res_fname):
+    """
+    Evaluate multiple pretrained word embeddings.
+    """
+    df = pd.DataFrame()
+    for embed_fname in embed_fnames:
+        WR = WordReps()
+        WR.read_model(embed_fname)        
+        res = evaluate_embed_matrix(WR, mode=mode)
+        if "pos" in mode or "all" in mode:
+            res = {**res, **evaluate_pos(embed_fname)}
+        df = df.append(pd.DataFrame(res, index=[embed_fname.split('/')[-1]]))
+    df.to_csv(res_fname)
+    print(tabulate(df, headers='keys', tablefmt='psql'))
+    return df
 
 def get_psycho(WR):
     """
@@ -662,7 +686,7 @@ def get_psycho(WR):
     words = []
     X = []
     res = {}
-    with open(os.path.join(pkg_dir, "../benchmarks/psycho.csv")) as data_file:
+    with open(os.path.join(pkg_dir, "./benchmarks/psycho.csv")) as data_file:
         data_file.readline()
         for line in data_file:
             p = line.strip().split(',')
@@ -676,7 +700,7 @@ def get_psycho(WR):
             X.append(WR.vects.get(word, numpy.zeros(WR.dim)))
 
     n = len(words)
-    test_end = n / 5
+    test_end = n // 5
     for rating_type in ratings:
         M = MLPRegressor(hidden_layer_sizes=(100,), activation='relu', solver='adam', max_iter=1000)
         M.fit(X[test_end:], ratings[rating_type][test_end:])
@@ -746,6 +770,7 @@ def cli():
                                                     psycholinguistic score prediction and part-of-speech tagging tasks.")
     
     parser.add_argument("-i", nargs="+", help="specify the input files from which to read word representations.")
+    parser.add_argument("-d", type=str, help="read all files from the specificed directory")
     parser.add_argument("-o", type=str, help="specify the csv formatted output file to which the evaluation result to be written.")
     parser.add_argument("-m", nargs="+", 
         help="mode of operation. lex for semantic similarity,\
@@ -757,7 +782,12 @@ def cli():
 
     if args.m:
         print("Modes of operations =", args.m)
-        evaluate_embeddings(args.input, args.dim, args.output, mode)
+        if args.d:
+            # We will get the files list from the specified directory
+            filelist = glob.glob(args.d+"/*")
+            eval_all(filelist, args.m, args.o)
+        elif args.i:
+            eval_all(args.i, args.m, args.o)
     else:
         sys.stderr.write(parser.print_help())
     pass

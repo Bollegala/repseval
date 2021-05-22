@@ -1,11 +1,13 @@
 # README #
 
 ## Requirements ##
-- Python 2.7 or above
+- Python 3.6 or above
 - numpy
 - scipy
 - Perl 5 or above (for SemEval evaluation)
 - sklearn (for short-text classification evaluation)
+- pytroch version 3.6
+do ```pip install -r requirements.txt``` to install the requirements.
 
 ## Execution ##
 
@@ -77,7 +79,7 @@ We use the input word embeddings in a neural network (containing a single hidden
 See Section 4.2 of [this](https://arxiv.org/abs/1709.01186#) paper for further details regarding this setting.
 
 ### Part of Speech Tagging
-`pos.py` in the `./src` directory can be used to evaluate pretrained word embeddings for Part-of-Speech (PoS) on the CoNLL-2003 dataset. Specifically, we train an LSTM initialised with pretrained word embeddings, followed by a hidden layer (default to 100 dimensions) and a softmax layer that predicts a word into one of the 47 PoS tags. The LSTM is trained on the standard train split of the CoNLL-2003 dataset and evaluated on the standard test split of the same. Accuracy (fraction of correctly PoS predicted tokens), macro-averaged precision, recall, F scores over the 47 PoS categories are reported as the evaluation metrics.
+`pos.py` can be used to evaluate pretrained word embeddings for Part-of-Speech (PoS) on the CoNLL-2003 dataset. Specifically, we train an LSTM initialised with pretrained word embeddings, followed by a hidden layer (default to 100 dimensions) and a softmax layer that predicts a word into one of the 47 PoS tags. The LSTM is trained on the standard train split of the CoNLL-2003 dataset and evaluated on the standard test split of the same. Accuracy (fraction of correctly PoS predicted tokens), macro-averaged precision, recall, F scores over the 47 PoS categories are reported as the evaluation metrics.
 
 The script depends on various packages which could be installed via pip as follows
 ```

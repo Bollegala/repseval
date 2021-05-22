@@ -115,8 +115,8 @@ def process(embed_fname, dim):
     torch.save(model, model_fname)
 
     #model = torch.load(model_fname)
-    test_model(model, test_data, word_to_ix, tag_to_ix, ix_to_tag)
-    pass
+    return test_model(model, test_data, word_to_ix, tag_to_ix, ix_to_tag)
+    
 
 def train_model(train_data, dim, embed_fname, word_to_ix, tag_to_ix):            
     EMBEDDING_DIM = dim
@@ -193,7 +193,7 @@ def test_model(model, test_data, word_to_ix, tag_to_ix, ix_to_tag):
     macro_F = df['F'].mean()
     df = df.append(pd.DataFrame({'precision':macro_precision, 'recall':macro_recall, 'F':macro_F}, index=["Macro"]))
     print(tabulate(df, headers='keys', tablefmt='psql'))
-    pass
+    return {'pos_precision':macro_precision, 'pos_recall':macro_recall, 'pos_F':macro_F, 'pos_accuracy':acc}
 
 def guess_dim(fname):
     """
