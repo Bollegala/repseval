@@ -15,7 +15,7 @@ do ```pip install -r requirements.txt``` to install the requirements.
 
 To evaluate on semantic similarity benchmarks, go to the src directory and execute
 ```
-python eval.py -m lex -d noOfDimensions -i wordRepsFile -o result.csv
+python evaluate.py -m lex -i wordRepsFile -o result.csv
 ```
 
 * -m option specifies the mode of operation.
@@ -23,19 +23,27 @@ python eval.py -m lex -d noOfDimensions -i wordRepsFile -o result.csv
     'ana' to evaluate on word analogy benchmarks.
     'rel' to evaluate on relation classification benchmarks.
     'txt' to evaluate on short text classification benchmarks.
+    'psy' to evaluate on pyscolinguistic score prediction benchmarks.
+    'pos' to evaluate on part-of-speech tagging using CoNLL-2003 dataset.
     You can combine multiple evaluations using a comma. For example, -m=lex,ana,rel,txt will perform all evaluations in one go.
 
-* -d option is used to specify the dimensionality of the word representations.
+* -d option is used to specify a directory that contains multiple files.
 
-* -i specifies the input file from which we will read word representations. The format of this file is as follows.
-Each line represents the word vector for a particular word. First element in each line is the word and subsequent elements
-(in total the number of columns corresponding to the dimensionality specified using the -d option) contains the value of
-each dimension of the representation.
+* -i specifies the input file from which we will read word representations. The file must be using the gensim format,
+where the first line contains vocabulary size and dimensionality in integers, separated by a space and remainder 
+of the lines each represents the word vector for a particular word. 
+First element in each line is the word and subsequent elements
 
 * -o is the name of the output file into which we will write the Pearson correlation coefficients and their significance values.
 This is a csv file.
 
 * There are several ways to compute the relational similarity between two pairs of words such as CosAdd, CosMult, PairDiff, and CosSub. This tool uses CosAdd as the default method. You can try different methods, which are also implemented in the tool. See source code for more details. 
+
+#### Installation ####
+repseval depends on various packages which could be installed via pip as follows
+```
+pip install -r requirements.txt
+```
 
 #### The following semantic similarity benchmarks are available in this suite. ####
 
@@ -81,14 +89,6 @@ See Section 4.2 of [this](https://arxiv.org/abs/1709.01186#) paper for further d
 ### Part of Speech Tagging
 `pos.py` can be used to evaluate pretrained word embeddings for Part-of-Speech (PoS) on the CoNLL-2003 dataset. Specifically, we train an LSTM initialised with pretrained word embeddings, followed by a hidden layer (default to 100 dimensions) and a softmax layer that predicts a word into one of the 47 PoS tags. The LSTM is trained on the standard train split of the CoNLL-2003 dataset and evaluated on the standard test split of the same. Accuracy (fraction of correctly PoS predicted tokens), macro-averaged precision, recall, F scores over the 47 PoS categories are reported as the evaluation metrics.
 
-The script depends on various packages which could be installed via pip as follows
-```
-pip install -r requirements.txt
-```
-Then, you can evaluate a pretrained word embedding (in a text file `embed_fname` in the `gensim` format, where the first line contains two numbers -- the number of words and dimensionality) and the dimensionality of the embedding `dim` as follows:
-```
-python pos.py -d dim -f embed_fname
-```
 
 
 
