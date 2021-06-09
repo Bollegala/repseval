@@ -58,6 +58,9 @@ class WordReps:
             
         while len(line) != 0:
             p = line.split()
+            if len(p) != self.dim + 1:
+                line = F.readline()
+                continue
             word = p[0]
             if not case_sensitive:
                 word = word.lower()
